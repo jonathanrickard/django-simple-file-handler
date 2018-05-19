@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: django-simple-file-handler
-Version: 0.1.2
+Version: 0.1.3
 Summary: A Django app for uploading documents and images
 Home-page: http://www.jonathanrickard.com/
 Author: Jonathan Rickard
@@ -161,10 +161,10 @@ Description: ==========================
         
             ...
                 def __init__(self, *args, **kwargs):
+                    super().__init__(*args, **kwargs)
                     self._meta.get_field('saved_file').validators = [
                         CheckExtMIME(allowed_attributes=MY_DICTIONARY),
                     ]
-                    super().__init__(*args, **kwargs)
         
         The dictionary's format can optionally include arguments for file extensions, MIME types and verbose names for file formats (these will appear in error messages if given). Here is an example: ::
         
