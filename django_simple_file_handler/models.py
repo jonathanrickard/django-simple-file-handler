@@ -138,10 +138,10 @@ class PDFMixin(BaseMixin):
 
 class PublicDocument(BaseMixin, TitledMixin, PublicMixin):
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._meta.get_field('saved_file').validators = [
             CheckExtMIME(allowed_attributes=CHECK_DOC),
         ]
-        super().__init__(*args, **kwargs)
     subdirectory_path = 'documents/public/'
     class Meta:
         verbose_name = 'document (public)'
@@ -150,10 +150,10 @@ class PublicDocument(BaseMixin, TitledMixin, PublicMixin):
 
 class PrivateDocument(BaseMixin, TitledMixin, PrivateMixin):
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._meta.get_field('saved_file').validators = [
             CheckExtMIME(allowed_attributes=CHECK_DOC),
         ]
-        super().__init__(*args, **kwargs)
     subdirectory_path = 'documents/private/'
     proxy_reverse = 'django_simple_file_handler:proxy_document'
     def save(self, *args, **kwargs):
@@ -166,10 +166,10 @@ class PrivateDocument(BaseMixin, TitledMixin, PrivateMixin):
 
 class TemporaryDocument(BaseMixin, TitledMixin, TemporaryMixin):
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._meta.get_field('saved_file').validators = [
             CheckExtMIME(allowed_attributes=CHECK_DOC),
         ]
-        super().__init__(*args, **kwargs)
     subdirectory_path = 'documents/temporary/'
     class Meta:
         verbose_name = 'document (temporary)'
@@ -178,10 +178,10 @@ class TemporaryDocument(BaseMixin, TitledMixin, TemporaryMixin):
 
 class UnprocessedImage(BaseMixin, TitledMixin, PublicMixin):
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._meta.get_field('saved_file').validators = [
             CheckExtMIME(allowed_attributes=CHECK_WEB_IMAGE),
         ]
-        super().__init__(*args, **kwargs)
     subdirectory_path = 'images/unprocessed/'
     class Meta:
         verbose_name = 'image (unprocessed)'
@@ -190,10 +190,10 @@ class UnprocessedImage(BaseMixin, TitledMixin, PublicMixin):
 
 class ProcessedImage(BaseMixin):
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._meta.get_field('saved_file').validators = [
             CheckExtMIME(allowed_attributes=CHECK_RAW_IMAGE),
         ]
-        super().__init__(*args, **kwargs)
     output_width = models.PositiveIntegerField(
         blank=True,
         null=True,
