@@ -153,10 +153,10 @@ To support different file types, initialize your model with your own dictionary 
 
     ...
         def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
             self._meta.get_field('saved_file').validators = [
                 CheckExtMIME(allowed_attributes=MY_DICTIONARY),
             ]
-            super().__init__(*args, **kwargs)
 
 The dictionary's format can optionally include arguments for file extensions, MIME types and verbose names for file formats (these will appear in error messages if given). Here is an example: ::
 
