@@ -42,6 +42,7 @@ class BaseMixin(models.Model):
         storage=RemoveOldFile(),
         upload_to=create_file_path,
         validators=[],
+        max_length=254,
     )
     def file_url(self):
         if self.saved_file:
