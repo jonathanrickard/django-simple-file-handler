@@ -20,6 +20,7 @@ django_simple_file_handler.egg-info/SOURCES.txt
 django_simple_file_handler.egg-info/dependency_links.txt
 django_simple_file_handler.egg-info/top_level.txt
 django_simple_file_handler/migrations/0001_initial.py
+django_simple_file_handler/migrations/0002_auto_20180521_1545.py
 django_simple_file_handler/migrations/__init__.py
 django_simple_file_handler/templates/.DS_Store
 django_simple_file_handler/templates/admin/.DS_Store

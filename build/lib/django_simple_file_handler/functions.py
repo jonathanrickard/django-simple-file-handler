@@ -41,7 +41,7 @@ def create_key(length):
 
     
 def create_slug(title):
-    return slugify(title)
+    return slugify(title)[:200]
 
 
 def create_slug_with_key(title):
