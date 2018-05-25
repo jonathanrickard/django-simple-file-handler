@@ -39,6 +39,7 @@ class BaseMixin(models.Model):
         blank=True,
     )
     saved_file = models.FileField(
+        'uploaded file',
         storage=RemoveOldFile(),
         upload_to=create_file_path,
         validators=[],
