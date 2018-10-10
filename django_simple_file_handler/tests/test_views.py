@@ -1,60 +1,46 @@
-from django.urls import (
-    reverse,
-)
 from django.test import (
-    RequestFactory,
     TestCase,
 )
 
 
-from django_simple_file_handler.models import (
+from ..models import (
     PrivateDocument,
     PrivatePDF,
 )
-from django_simple_file_handler.views import *
-
-
-from .functions import (
-    create_user,
+from ..views import *
+from .test_functions import (
     create_document_instance,
     create_pdf_instance,
+    create_response,
 )
 
 
-class PrivateDocumentViewTests(TestCase):
-    def setUp(self):
-        self.factory = RequestFactory()
-        self.user = create_user()
-        self.private_document = create_document_instance(PrivateDocument)
-    def test_document_proxy(self):
-        request = self.factory.get(reverse(
-            'django_simple_file_handler:proxy_document',
-            kwargs={
-                'proxy_slug': self.private_document.proxy_slug
-            },
-        ))
-        request.user = self.user
-        response = proxy_document(request, self.private_document.proxy_slug)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, self.private_document.saved_file.read())
-    def tearDown(self):
-        self.private_document.delete()
+class MixinWrap:
+    class BaseMixin(TestCase):
+        def setUp(self):
+            self.response = create_response(self)
+        def test_proxy(self):
+            self.assertEqual(self.response.status_code, 200)
+            self.assertEqual(self.response.content, self.test_instance.saved_file.read())
+        def tearDown(self):
+            self.test_instance.delete()
 
-class PrivatePDFViewTests(TestCase):
+
+class PrivateDocumentViewTests(MixinWrap.BaseMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
     def setUp(self):
-        self.factory = RequestFactory()
-        self.user = create_user()
-        self.private_pdf = create_pdf_instance(PrivatePDF)
-    def test_pdf_proxy(self):
-        request = self.factory.get(reverse(
-            'django_simple_file_handler:proxy_pdf',
-            kwargs={
-                'proxy_slug': self.private_pdf.proxy_slug
-            },
-        ))
-        request.user = self.user
-        response = proxy_pdf(request, self.private_pdf.proxy_slug)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, self.private_pdf.saved_file.read())
-    def tearDown(self):
-        self.private_pdf.delete()
+        self.test_instance = create_document_instance(PrivateDocument)
+        self.test_view = proxy_document
+        self.reverse_name = 'django_simple_file_handler:proxy_document'
+        super().setUp()
+
+
+class PrivatePDFViewTests(MixinWrap.BaseMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    def setUp(self):
+        self.test_instance = create_pdf_instance(PrivatePDF)
+        self.test_view = proxy_pdf
+        self.reverse_name = 'django_simple_file_handler:proxy_pdf'
+        super().setUp()

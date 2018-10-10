@@ -8,174 +8,177 @@ from django.test import (
 )
 
 
-from django_simple_file_handler.models import *
-
-
-from .functions import (
+from ..models import *
+from .test_functions import (
     attribute_exists,
     create_document_instance,
+    create_pdf_instance,
     create_processed_image_instance,
     create_unprocessed_image_instance,
-    create_pdf_instance,
 )
 
 
-class PublicDocumentTests(TestCase):
+class MixinWrap:
+    class BaseMixin(TestCase):
+        checked_attributes = [
+            'created',
+            'updated',
+        ]
+        longMessage = False
+        def test_file_exists(self):
+            error_msg = "For '{}', the file does not exist" .format(self.test_instance.__class__.__name__)
+            self.assertIs(attribute_exists(self.test_instance.saved_file.file), True, error_msg)
+        def test_attribute_has_value(self):
+            for attr in self.checked_attributes:
+                error_msg = "For '{}', the attribute '{}' did not return a value" .format(self.test_instance.__class__.__name__, attr)
+                self.assertTrue(len(str(getattr(self.test_instance, attr))) > 0, error_msg)
+        def test_attribute_value(self):
+            try:
+                checked_values = self.checked_values
+            except AttributeError:
+                checked_values = {}
+            for attr, value in checked_values.items():
+                error_msg = "For '{}', the value for '{}' was not '{}'" .format(self.test_instance.__class__.__name__, attr, value)
+                self.assertTrue(getattr(self.test_instance, attr, '') == value, error_msg)
+        def test_attribute_value_contains(self):
+            try:
+                checked_values_contain = self.checked_values_contain
+            except AttributeError:
+                checked_values_contain = {}
+            for attr, value in checked_values_contain.items():
+                error_msg = "For '{}', the value for '{}' did not contain '{}'" .format(self.test_instance.__class__.__name__, attr, value)
+                self.assertIn(value, str(getattr(self.test_instance, attr, '')), error_msg)
+        def tearDown(self):
+            self.test_instance.delete()
+
+
+class PublicDocumentTests(MixinWrap.BaseMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.checked_values = {
+            'title':'Test Document',
+            'extra_text':'Test extra text',
+            'generated_name':'test-document',
+            'saved_file':'documents/public/test-document.pdf',
+        }
     def setUp(self):
-        self.document_instance = create_document_instance(PublicDocument)
-    def test_public_document_created(self):
-        self.assertIs(attribute_exists(self.document_instance.created), True)
-    def test_public_document_updated(self):
-        self.assertIs(attribute_exists(self.document_instance.updated), True)
-    def test_public_document_title(self):
-        self.assertIs(attribute_exists(self.document_instance.title), True)
-    def test_public_document_generated_name(self):
-        self.assertIs(attribute_exists(self.document_instance.generated_name), True)
-    def test_public_document_extra_text(self):
-        self.assertIs(attribute_exists(self.document_instance.extra_text), True)
-    def test_public_document_file_saved(self):
-        self.assertIs(attribute_exists(self.document_instance.saved_file.file), True)
-    def tearDown(self):
-        self.document_instance.delete()
+        self.test_instance = create_document_instance(PublicDocument)
 
 
-class PrivateDocumentTests(TestCase):
+class PrivateDocumentTests(MixinWrap.BaseMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.checked_attributes = self.checked_attributes + [
+            'generated_name',
+        ]
+        self.checked_values = {
+            'title':'Test Document',
+            'extra_text':'Test extra text',
+            'proxy_slug':'test-document.pdf',
+        }
+        self.checked_values_contain = {
+            'saved_file':'documents/private/',
+            'saved_file':'.pdf',
+        }
     def setUp(self):
-        self.document_instance = create_document_instance(PrivateDocument)
-    def test_private_document_created(self):
-        self.assertIs(attribute_exists(self.document_instance.created), True)
-    def test_private_document_updated(self):
-        self.assertIs(attribute_exists(self.document_instance.updated), True)
-    def test_private_document_title(self):
-        self.assertIs(attribute_exists(self.document_instance.title), True)
-    def test_private_document_generated_name(self):
-        self.assertIs(attribute_exists(self.document_instance.generated_name), True)
-    def test_private_document_extra_text(self):
-        self.assertIs(attribute_exists(self.document_instance.extra_text), True)
-    def test_private_document_proxy_slug(self):
-        self.assertIs(attribute_exists(self.document_instance.proxy_slug), True)
-    def test_private_document_file_saved(self):
-        self.assertIs(attribute_exists(self.document_instance.saved_file.file), True)
-    def tearDown(self):
-        self.document_instance.delete()
+        self.test_instance = create_document_instance(PrivateDocument)
 
 
-class TemporaryDocumentTests(TestCase):
+class TemporaryDocumentTests(MixinWrap.BaseMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.checked_values = {
+            'title':'Test Document',
+            'extra_text':'Test extra text',
+        }
+        self.checked_values_contain = {
+            'generated_name':'test-document',
+            'saved_file':'documents/temporary/',
+            'saved_file':'.pdf',
+        }
     def setUp(self):
-        self.document_instance = create_document_instance(TemporaryDocument)
-    def test_temporary_document_created(self):
-        self.assertIs(attribute_exists(self.document_instance.created), True)
-    def test_temporary_document_updated(self):
-        self.assertIs(attribute_exists(self.document_instance.updated), True)
-    def test_temporary_document_title(self):
-        self.assertIs(attribute_exists(self.document_instance.title), True)
-    def test_temporary_document_generated_name(self):
-        self.assertIs(attribute_exists(self.document_instance.generated_name), True)
-    def test_temporary_document_extra_text(self):
-        self.assertIs(attribute_exists(self.document_instance.extra_text), True)
-    def test_temporary_document_file_saved(self):
-        self.assertIs(attribute_exists(self.document_instance.saved_file.file), True)
-    def tearDown(self):
-        self.document_instance.delete()
+        self.test_instance = create_document_instance(TemporaryDocument)
 
 
-class UnprocessedImageTests(TestCase):
+class UnprocessedImageTests(MixinWrap.BaseMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.checked_values = {
+            'title':'Test Image',
+            'extra_text':'Test extra text',
+            'generated_name':'test-image',
+            'saved_file':'images/unprocessed/test-image.jpeg',
+        }
     def setUp(self):
-        self.image_instance = create_unprocessed_image_instance(UnprocessedImage)
-    def test_unprocessed_image_created(self):
-        self.assertIs(attribute_exists(self.image_instance.created), True)
-    def test_unprocessed_image_updated(self):
-        self.assertIs(attribute_exists(self.image_instance.updated), True)
-    def test_unprocessed_image_title(self):
-        self.assertIs(attribute_exists(self.image_instance.title), True)
-    def test_unprocessed_image_generated_name(self):
-        self.assertIs(attribute_exists(self.image_instance.generated_name), True)
-    def test_unprocessed_image_extra_text(self):
-        self.assertIs(attribute_exists(self.image_instance.extra_text), True)
-    def test_unprocessed_image_file_saved(self):
-        self.assertIs(attribute_exists(self.image_instance.saved_file.file), True)
-    def tearDown(self):
-        self.image_instance.delete()
+        self.test_instance = create_unprocessed_image_instance(UnprocessedImage)
 
 
-class ProcessedImageTests(TestCase):
+class ProcessedImageTests(MixinWrap.BaseMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.checked_attributes = self.checked_attributes + [
+            'generated_name',
+        ]
+        self.checked_values_contain = {
+            'saved_file':'images/raw/',
+            'saved_file':'.jpeg',
+        }
     def setUp(self):
-        self.image_instance = create_processed_image_instance(ProcessedImage)        
-    def test_processed_image_created(self):
-        self.assertIs(attribute_exists(self.image_instance.created), True)
-    def test_processed_image_updated(self):
-        self.assertIs(attribute_exists(self.image_instance.updated), True)
-    def test_processed_image_generated_name(self):
-        self.assertIs(attribute_exists(self.image_instance.generated_name), True)
-    def test_processed_image_extra_text(self):
-        self.assertIs(attribute_exists(self.image_instance.extra_text), True)
-    def test_processed_image_raw_file_saved(self):
-        self.assertIs(attribute_exists(self.image_instance.saved_file.file), True)
-    def test_processed_image_processed_file_saved(self):
-        self.assertIs(attribute_exists(self.image_instance.processed_file.file), True)
-        processed_image = Image.open(self.image_instance.processed_file.file)
-        self.assertIs(processed_image.width, 200)
-        self.assertIs(processed_image.height, 100)
-        self.assertIs(processed_image.mode, 'RGB')
-        self.assertIs(processed_image.format, 'PNG')
-    def tearDown(self):
-        self.image_instance.delete()
+        self.test_instance = create_processed_image_instance(ProcessedImage)
+    def test_processed_image_processed_file(self):
+        processed_image = self.test_instance.processed_file
+        self.assertIn('images/processed', processed_image.name)
+        self.assertIn('.png', processed_image.name)
+        processed_file = Image.open(processed_image.file)
+        self.assertIs(processed_file.width, 200)
+        self.assertIs(processed_file.height, 100)
+        self.assertIs(processed_file.mode, 'RGB')
+        self.assertIs(processed_file.format, 'PNG')
 
 
-class PublicPDFTests(TestCase):
+class PublicPDFTests(MixinWrap.BaseMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.checked_values = {
+            'title':'PDF file name',
+            'extra_text':'Test extra text',
+            'generated_name':'pdf-file-name',
+            'saved_file':'pdf/public/pdf-file-name.pdf',
+        }
     def setUp(self):
-        self.pdf_instance = create_pdf_instance(PublicPDF)
-    def test_public_pdf_created(self):
-        self.assertIs(attribute_exists(self.pdf_instance.created), True)
-    def test_public_pdf_updated(self):
-        self.assertIs(attribute_exists(self.pdf_instance.updated), True)
-    def test_public_pdf_title(self):
-        self.assertIs(attribute_exists(self.pdf_instance.title), True)
-    def test_public_pdf_generated_name(self):
-        self.assertIs(attribute_exists(self.pdf_instance.generated_name), True)
-    def test_public_pdf_extra_text(self):
-        self.assertIs(attribute_exists(self.pdf_instance.extra_text), True)
-    def test_public_pdf_file_creation(self):
-        self.assertIs(attribute_exists(self.pdf_instance.saved_file.file), True)
-    def tearDown(self):
-        self.pdf_instance.delete()
-    
+        self.test_instance = create_pdf_instance(PublicPDF)
 
-class PrivatePDFTests(TestCase):
+
+class PrivatePDFTests(MixinWrap.BaseMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.checked_attributes = self.checked_attributes + [
+            'generated_name',
+        ]
+        self.checked_values = {
+            'title':'PDF file name',
+            'extra_text':'Test extra text',
+            'proxy_slug':'pdf-file-name.pdf',
+        }
+        self.checked_values_contain = {
+            'saved_file':'pdf/private/',
+            'saved_file':'.pdf',
+        }
     def setUp(self):
-        self.pdf_instance = create_pdf_instance(PrivatePDF)
-    def test_private_pdf_created(self):
-        self.assertIs(attribute_exists(self.pdf_instance.created), True)
-    def test_private_pdf_updated(self):
-        self.assertIs(attribute_exists(self.pdf_instance.updated), True)
-    def test_private_pdf_title(self):
-        self.assertIs(attribute_exists(self.pdf_instance.title), True)
-    def test_private_pdf_generated_name(self):
-        self.assertIs(attribute_exists(self.pdf_instance.generated_name), True)
-    def test_private_pdf_proxy_slug(self):
-        self.assertIs(attribute_exists(self.pdf_instance.proxy_slug), True)
-    def test_private_pdf_extra_text(self):
-        self.assertIs(attribute_exists(self.pdf_instance.extra_text), True)
-    def test_private_pdf_file_creation(self):
-        self.assertIs(attribute_exists(self.pdf_instance.saved_file.file), True)
-    def tearDown(self):
-        self.pdf_instance.delete()
+        self.test_instance = create_pdf_instance(PrivatePDF)
 
 
-class TemporaryPDFTests(TestCase):
+class TemporaryPDFTests(MixinWrap.BaseMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.checked_values = {
+            'title':'PDF file name',
+            'extra_text':'Test extra text',
+        }
+        self.checked_values_contain = {
+            'generated_name':'pdf-file-name',
+            'saved_file':'pdf/temporary/',
+            'saved_file':'.pdf',
+        }
     def setUp(self):
-        self.pdf_instance = create_pdf_instance(TemporaryPDF)
-    def test_temporary_pdf_created(self):
-        self.assertIs(attribute_exists(self.pdf_instance.created), True)
-    def test_temporary_pdf_updated(self):
-        self.assertIs(attribute_exists(self.pdf_instance.updated), True)
-    def test_temporary_pdf_title(self):
-        self.assertIs(attribute_exists(self.pdf_instance.title), True)
-    def test_temporary_pdf_generated_name(self):
-        self.assertIs(attribute_exists(self.pdf_instance.generated_name), True)
-    def test_temporary_pdf_extra_text(self):
-        self.assertIs(attribute_exists(self.pdf_instance.extra_text), True)
-    def test_temporary_pdf_file_creation(self):
-        self.assertIs(attribute_exists(self.pdf_instance.saved_file.file), True)
-    def tearDown(self):
-        self.pdf_instance.delete()
+        self.test_instance = create_pdf_instance(TemporaryPDF)
