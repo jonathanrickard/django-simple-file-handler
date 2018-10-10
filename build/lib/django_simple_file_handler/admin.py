@@ -16,6 +16,11 @@ class BaseForm(forms.ModelForm):
             'unique': 'This title is already in use.',
         }
     )
+    class Meta:
+        fields = [
+            'extra_text',
+            'saved_file',
+        ]
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -29,15 +34,6 @@ class BaseAdmin(admin.ModelAdmin):
         'updated',
     ]
     fieldsets = [
-        (
-            None, {
-                'fields': [
-                    'title',
-                    'extra_text',
-                    'saved_file',
-                ]
-            }
-        ),
         (
             'Date and time information', {
                 'fields': [
@@ -55,11 +51,39 @@ class BaseAdmin(admin.ModelAdmin):
         'file_link',
         'updated',
     ]
-    ordering = ('title',)
+    ordering = [
+        'title',
+    ]
     list_per_page = 20
 
 
-class ReadOnlyAdmin(admin.ModelAdmin):
+class AdditionalFieldsAdmin(admin.ModelAdmin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fieldsets = [
+            (
+                None, {
+                    'fields': [
+                        'title',
+                        'extra_text',
+                        'saved_file',
+                    ]
+                }
+            ),
+        ] + self.fieldsets
+
+
+class ReadOnlyFieldsAdmin(admin.ModelAdmin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.readonly_fields = [
+            'title',
+            'extra_text',
+            'saved_file',
+        ] + self.readonly_fields
+
+
+class ReadOnlyMethodsAdmin(admin.ModelAdmin):
     def has_add_permission(self, request, obj=None):
         return False
     def change_view(self, request, object_id, form_url='', extra_context=None):
@@ -70,16 +94,20 @@ class ReadOnlyAdmin(admin.ModelAdmin):
         return super().change_view(request, object_id, form_url, more_context)
 
 
+class PrivateAdmin(admin.ModelAdmin):
+    list_display = [
+        'title',
+        'proxy_link',
+        'updated',
+    ]
+
+
 class PublicDocumentForm(BaseForm):
-    class Meta:
+    class Meta(BaseForm.Meta):
         model = PublicDocument
-        fields = [
-            'extra_text',
-            'saved_file',
-        ]
 
 
-class PublicDocumentAdmin(BaseAdmin):
+class PublicDocumentAdmin(BaseAdmin, AdditionalFieldsAdmin):
     form = PublicDocumentForm
 
 
@@ -90,21 +118,12 @@ admin.site.register(
 
 
 class PrivateDocumentForm(BaseForm):
-    class Meta:
+    class Meta(BaseForm.Meta):
         model = PrivateDocument
-        fields = [
-            'extra_text',
-            'saved_file',
-        ]
 
 
-class PrivateDocumentAdmin(BaseAdmin):
+class PrivateDocumentAdmin(BaseAdmin, AdditionalFieldsAdmin, PrivateAdmin):
     form = PrivateDocumentForm
-    list_display = [
-        'title',
-        'proxy_link',
-        'updated',
-    ]
 
 
 admin.site.register(
@@ -113,14 +132,8 @@ admin.site.register(
 )
 
 
-class TemporaryDocumentAdmin(BaseAdmin, ReadOnlyAdmin):
-    readonly_fields = [
-        'created',
-        'updated',
-        'title',
-        'extra_text',
-        'saved_file',
-    ]
+class TemporaryDocumentAdmin(BaseAdmin, AdditionalFieldsAdmin, ReadOnlyFieldsAdmin, ReadOnlyMethodsAdmin):
+    pass
 
 
 admin.site.register(
@@ -130,15 +143,11 @@ admin.site.register(
 
 
 class UnprocessedImageForm(BaseForm):
-    class Meta:
+    class Meta(BaseForm.Meta):
         model = UnprocessedImage
-        fields = [
-            'extra_text',
-            'saved_file',
-        ]
 
 
-class UnprocessedImageAdmin(BaseAdmin):
+class UnprocessedImageAdmin(BaseAdmin, AdditionalFieldsAdmin):
     form = UnprocessedImageForm
 
 
@@ -148,49 +157,43 @@ admin.site.register(
 )
 
 
-class ProcessedImageAdmin(BaseAdmin, ReadOnlyAdmin):
+class ProcessedImageAdmin(BaseAdmin, ReadOnlyMethodsAdmin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.readonly_fields = [
+            'generated_name',
+            'output_width',
+            'output_height',
+            'extra_text',
+            'processed_file',
+            'saved_file',
+        ] + self.readonly_fields
+        self.fieldsets = [
+            (
+                None, {
+                    'fields': [
+                        'generated_name',
+                        'output_width',
+                        'output_height',
+                        'extra_text',
+                        'processed_file',
+                        'saved_file',
+                    ]
+                }
+            ),
+        ] + self.fieldsets
     search_fields = [
         'generated_name',
-    ]
-    readonly_fields = [
-        'created',
-        'updated',
-        'generated_name',
-        'output_width',
-        'output_height',
-        'processed_file',
-        'saved_file',
-    ]
-    fieldsets = [
-        (
-            None, {
-                'fields': [
-                    'generated_name',
-                    'output_width',
-                    'output_height',
-                    'processed_file',
-                    'saved_file',
-                ]
-            }
-        ),
-        (
-            'Date and time information', {
-                'fields': [
-                    'created',
-                    'updated',
-                ],
-                'classes': [
-                    'collapse',
-                ]
-            }
-        ),
+        'extra_text',
     ]
     list_display = [
         'generated_name',
         'image_link',
         'updated',
     ]
-    ordering = ('generated_name',)
+    ordering = [
+        'generated_name',
+    ]
 
 
 admin.site.register(
@@ -199,14 +202,8 @@ admin.site.register(
 )
 
 
-class PublicPDFAdmin(BaseAdmin, ReadOnlyAdmin):
-    readonly_fields = [
-        'created',
-        'updated',
-        'title',
-        'extra_text',
-        'saved_file',
-    ]
+class PublicPDFAdmin(BaseAdmin, AdditionalFieldsAdmin, ReadOnlyFieldsAdmin, ReadOnlyMethodsAdmin):
+    pass
 
 
 admin.site.register(
@@ -215,19 +212,8 @@ admin.site.register(
 )
 
 
-class PrivatePDFAdmin(BaseAdmin, ReadOnlyAdmin):
-    readonly_fields = [
-        'created',
-        'updated',
-        'title',
-        'extra_text',
-        'saved_file',
-    ]
-    list_display = [
-        'title',
-        'proxy_link',
-        'updated',
-    ]
+class PrivatePDFAdmin(BaseAdmin, AdditionalFieldsAdmin, ReadOnlyFieldsAdmin, ReadOnlyMethodsAdmin, PrivateAdmin):
+    pass
 
 
 admin.site.register(
@@ -236,14 +222,8 @@ admin.site.register(
 )
 
 
-class TemporaryPDFAdmin(BaseAdmin, ReadOnlyAdmin):
-    readonly_fields = [
-        'created',
-        'updated',
-        'title',
-        'extra_text',
-        'saved_file',
-    ]
+class TemporaryPDFAdmin(BaseAdmin, AdditionalFieldsAdmin, ReadOnlyFieldsAdmin, ReadOnlyMethodsAdmin):
+    pass
 
 
 admin.site.register(
