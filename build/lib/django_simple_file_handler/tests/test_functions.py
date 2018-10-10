@@ -14,6 +14,12 @@ from django.contrib.auth.models import (
 from django.core.files.uploadedfile import (
     SimpleUploadedFile,
 )
+from django.test import (
+    RequestFactory,
+)
+from django.urls import (
+    reverse,
+)
 
 
 def create_image_file():
@@ -52,7 +58,6 @@ def create_document_instance(model_name):
             'test file content'.encode(),
             'application/pdf',
         ),
-
     )
     document_instance.save()
     return document_instance
@@ -80,20 +85,28 @@ def create_processed_image_instance(model_name):
 
 
 def create_pdf_instance(model_name):
-    kwargs = {
-        'template_location' : 'django_simple_file_handler/tests/pdf_test.html',
-        'data' : {
-            'title_name': 'Title of PDF',
-            'test_value': 'A test value string',
-        },
-    }
     pdf_instance = model_name(
         title = 'PDF file name',
         extra_text = 'Test extra text',
-        **kwargs,
+        template_location = 'django_simple_file_handler/tests/pdf_test.html',
+        template_data = {
+            'title_name': 'Title of PDF',
+            'test_value': 'A test value string',
+        },
     )
     pdf_instance.save()
     return pdf_instance
+
+
+def create_response(self):
+    request = RequestFactory().get(reverse(
+        self.reverse_name,
+        kwargs={
+            'proxy_slug': self.test_instance.proxy_slug,
+        },
+    ))
+    request.user = create_user()
+    return self.test_view(request, self.test_instance.proxy_slug)
 
 
 def attribute_exists(instance_attribute):

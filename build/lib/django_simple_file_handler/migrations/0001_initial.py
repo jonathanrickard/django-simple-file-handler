@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django_simple_file_handler.functions
-import django_simple_file_handler.storage
 
 
 class Migration(migrations.Migration):
@@ -23,7 +22,7 @@ class Migration(migrations.Migration):
                 ('updated', models.DateTimeField(auto_now=True, verbose_name='last updated')),
                 ('generated_name', models.CharField(blank=True, max_length=254, null=True)),
                 ('extra_text', models.TextField(blank=True)),
-                ('saved_file', models.FileField(storage=django_simple_file_handler.storage.RemoveOldFile(), upload_to=django_simple_file_handler.functions.create_file_path)),
+                ('saved_file', models.FileField(upload_to=django_simple_file_handler.functions.create_file_path)),
                 ('title', models.CharField(max_length=254, unique=True)),
                 ('proxy_slug', models.CharField(blank=True, max_length=254, null=True)),
             ],
@@ -40,7 +39,7 @@ class Migration(migrations.Migration):
                 ('updated', models.DateTimeField(auto_now=True, verbose_name='last updated')),
                 ('generated_name', models.CharField(blank=True, max_length=254, null=True)),
                 ('extra_text', models.TextField(blank=True)),
-                ('saved_file', models.FileField(storage=django_simple_file_handler.storage.RemoveOldFile(), upload_to=django_simple_file_handler.functions.create_file_path)),
+                ('saved_file', models.FileField(upload_to=django_simple_file_handler.functions.create_file_path)),
                 ('title', models.CharField(max_length=254, unique=True)),
                 ('proxy_slug', models.CharField(blank=True, max_length=254, null=True)),
             ],
@@ -57,10 +56,10 @@ class Migration(migrations.Migration):
                 ('updated', models.DateTimeField(auto_now=True, verbose_name='last updated')),
                 ('generated_name', models.CharField(blank=True, max_length=254, null=True)),
                 ('extra_text', models.TextField(blank=True)),
-                ('saved_file', models.FileField(storage=django_simple_file_handler.storage.RemoveOldFile(), upload_to=django_simple_file_handler.functions.create_file_path)),
+                ('saved_file', models.FileField(upload_to=django_simple_file_handler.functions.create_file_path)),
                 ('output_width', models.PositiveIntegerField(blank=True, null=True)),
                 ('output_height', models.PositiveIntegerField(blank=True, null=True)),
-                ('processed_file', models.FileField(blank=True, null=True, storage=django_simple_file_handler.storage.RemoveOldFile(), upload_to='images/processed/')),
+                ('processed_file', models.FileField(blank=True, null=True, upload_to='images/processed/')),
             ],
             options={
                 'verbose_name': 'image (processed)',
@@ -75,7 +74,7 @@ class Migration(migrations.Migration):
                 ('updated', models.DateTimeField(auto_now=True, verbose_name='last updated')),
                 ('generated_name', models.CharField(blank=True, max_length=254, null=True)),
                 ('extra_text', models.TextField(blank=True)),
-                ('saved_file', models.FileField(storage=django_simple_file_handler.storage.RemoveOldFile(), upload_to=django_simple_file_handler.functions.create_file_path)),
+                ('saved_file', models.FileField(upload_to=django_simple_file_handler.functions.create_file_path)),
                 ('title', models.CharField(max_length=254, unique=True)),
             ],
             options={
@@ -91,7 +90,7 @@ class Migration(migrations.Migration):
                 ('updated', models.DateTimeField(auto_now=True, verbose_name='last updated')),
                 ('generated_name', models.CharField(blank=True, max_length=254, null=True)),
                 ('extra_text', models.TextField(blank=True)),
-                ('saved_file', models.FileField(storage=django_simple_file_handler.storage.RemoveOldFile(), upload_to=django_simple_file_handler.functions.create_file_path)),
+                ('saved_file', models.FileField(upload_to=django_simple_file_handler.functions.create_file_path)),
                 ('title', models.CharField(max_length=254, unique=True)),
             ],
             options={
@@ -107,7 +106,7 @@ class Migration(migrations.Migration):
                 ('updated', models.DateTimeField(auto_now=True, verbose_name='last updated')),
                 ('generated_name', models.CharField(blank=True, max_length=254, null=True)),
                 ('extra_text', models.TextField(blank=True)),
-                ('saved_file', models.FileField(storage=django_simple_file_handler.storage.RemoveOldFile(), upload_to=django_simple_file_handler.functions.create_file_path)),
+                ('saved_file', models.FileField(upload_to=django_simple_file_handler.functions.create_file_path)),
                 ('title', models.CharField(max_length=254, unique=True)),
             ],
             options={
@@ -123,7 +122,7 @@ class Migration(migrations.Migration):
                 ('updated', models.DateTimeField(auto_now=True, verbose_name='last updated')),
                 ('generated_name', models.CharField(blank=True, max_length=254, null=True)),
                 ('extra_text', models.TextField(blank=True)),
-                ('saved_file', models.FileField(storage=django_simple_file_handler.storage.RemoveOldFile(), upload_to=django_simple_file_handler.functions.create_file_path)),
+                ('saved_file', models.FileField(upload_to=django_simple_file_handler.functions.create_file_path)),
                 ('title', models.CharField(max_length=254, unique=True)),
             ],
             options={
@@ -139,7 +138,7 @@ class Migration(migrations.Migration):
                 ('updated', models.DateTimeField(auto_now=True, verbose_name='last updated')),
                 ('generated_name', models.CharField(blank=True, max_length=254, null=True)),
                 ('extra_text', models.TextField(blank=True)),
-                ('saved_file', models.FileField(storage=django_simple_file_handler.storage.RemoveOldFile(), upload_to=django_simple_file_handler.functions.create_file_path)),
+                ('saved_file', models.FileField(upload_to=django_simple_file_handler.functions.create_file_path)),
                 ('title', models.CharField(max_length=254, unique=True)),
             ],
             options={

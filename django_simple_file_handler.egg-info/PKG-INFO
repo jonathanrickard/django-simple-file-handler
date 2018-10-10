@@ -1,7 +1,7 @@
 Metadata-Version: 1.1
 Name: django-simple-file-handler
-Version: 0.1.5
-Summary: A Django app for uploading documents and images
+Version: 0.1.6
+Summary: A Django app for storing and processing documents and images
 Home-page: http://www.jonathanrickard.com/
 Author: Jonathan Rickard
 Author-email: jonathan.rickard@gmail.com
@@ -10,15 +10,15 @@ Description: ==========================
         django-simple-file-handler
         ==========================
         
-        The django-simple-file-handler package is an app for uploading and managing documents and images. With optional packages installed, it can process images and generate PDFs from HTML files. It has only been tested with Django 1.11 and Python 3.6.
+        The django-simple-file-handler package is an app for uploading and managing documents and images. With optional packages installed, it can process images and generate PDFs from HTML files. It only has been tested with Django 1.11 and Python 3.6.
         
-        If python-magic is installed, django-simple-file-handler will use it to check uploaded file MIME types. Otherwise, it will use Python's built-in library. This package has only been tested with python-magic 0.4.
+        If python-magic is installed, django-simple-file-handler will use it to check uploaded file MIME types. Otherwise, it will use Python's built-in library. This package only has been tested with python-magic 0.4.
         
-        Please note that "private" files and PDFs would more accurately be described as "hidden." The app generates a proxy URL that will load the file for a logged-in user and stores the file with a name consisting of many random characters. Still, it is possible to load these files without logging in if the file name is known.
+        Please note that "private" files and PDFs would be more accurately described as "hidden." The app generates a proxy URL that will load the file for a logged-in user and stores the file with a name consisting of many random characters. Still, it is possible to load these files without logging in if the file name is known.
         
-        Processed image generation requires that Pillow be installed. This package has only been tested with Pillow 5.0.
+        Processed image generation requires that Pillow be installed. This package only has been tested with Pillow 5.0.
         
-        PDF generation requires that either WeasyPrint or xhtml2pdf be installed. This package has only been tested with WeasyPrint 0.28 and xhtml2pdf 0.2.1. Please refer to those projects' documentation for HTML template-formatting specifics.
+        PDF generation requires that either WeasyPrint or xhtml2pdf be installed. This package only has been tested with WeasyPrint 0.28 and xhtml2pdf 0.2.1. Please refer to those projects' documentation for HTML template-formatting specifics.
         
         -----------
         Quick start
@@ -31,7 +31,6 @@ Description: ==========================
             INSTALLED_APPS = (
                 ...
                 'django_simple_file_handler',
-                
             )
         
         3. Run ``python manage.py migrate``.
@@ -40,131 +39,98 @@ Description: ==========================
         
             urlpatterns = [
                 ...
-                url(r'^private_file_pseudo_directory_path/', include('django_simple_file_handler.urls')),
+                url(
+                    r'^private-file-pseudo-directory-path/',
+                    include('django_simple_file_handler.urls')
+                ),
             ]
         
         ------
         Basics
         ------
         
-        Files are deleted or replaced when their corresponding model instances are deleted or changed.
+        Public and private document objects, as well as unprocessed image objects, can be created and managed via the admin site. Other types are read-only in the admin site.
         
-        Public and private documents, as well as unprocessed images, can be created and managed via the admin site. Other types are read-only in the admin site.
+        All types can be created and accessed by subclassing or creating a foreign key in your own apps.
         
-        The proxy URL for a private document or pdf can be accessed at ``model_instance.proxy_url``.
+        Temporary documents and temporary PDFs are intended to be used when two or more objects might need to have the same title. These add a string of random characters to the ends of file names to prevent overwriting files.
         
-        Temporary documents and PDFs are intended to be used for objects that might need to have the same title.
+        **Classes**
         
-        All types can be created and accessed by subclassing or creating a foreign key in your own apps, but temporary documents, processed images and public or private PDFs must be created this way. Here are some basic examples:
+        * ``PublicDocument`` — Includes uploaded document file
+        * ``PrivateDocument`` — Includes uploaded document file with a proxy URL requiring login
+        * ``TemporaryDocument`` —  Includes uploaded document file with a modified file name allowing title duplication
+        * ``UnprocessedImage`` — Includes uploaded image file
+        * ``ProcessedImage`` — Includes uploaded image file and processed image file
+        * ``PublicPDF`` — Includes generated PDF file
+        * ``PrivatePDF`` — Includes generated PDF file with a proxy URL requiring login
+        * ``TemporaryPDF`` — Includes generated PDF file with a modified file name allowing title duplication
         
-        **Temporary document** ::
+        **Attributes**
         
-            from django_simple_file_handler.models import TemporaryDocument
+        * ``created`` — ``DateTimeField`` with automatically generated value
+        * ``updated`` — ``DateTimeField`` with automatically generated value
+        * ``title`` — ``CharField`` with ``max_length`` of 245 characters (not available for ``ProcessedImage``)
+        * ``extra_text`` — ``TextField`` (optional)
+        * ``saved_file`` — ``FileField`` for the uploaded file
+        * ``processed_file`` — ``FileField`` for processed image (``ProcessedImage`` only)
+        * ``output_width`` — ``PositiveIntegerField`` (``ProcessedImage`` only)
+        * ``output_height`` — ``PositiveIntegerField`` (``ProcessedImage`` only)
+        * ``subdirectory_path`` — String containing the path used by ``saved_file``
+        * ``image_path`` — String containing the path used by ``processed_file`` (``ProcessedImage`` only)
+        * ``output_mode`` — String used by Pillow (``ProcessedImage`` only)
+        * ``content_type`` — String used by Pillow (``ProcessedImage`` only)
+        * ``file_format`` — String used by Pillow (``ProcessedImage`` only)
+        * ``file_extension`` — String used by Pillow (``ProcessedImage`` only)
         
-            class MyModel(models.Model):
-                ...
-                document_instance = TemporaryDocument(
-                    title = 'Your Temporary Document Title',
-                    extra_text = 'Any associated text you might need (optional)',
-                    saved_file = file_from_your_app,
-                )
-                document_instance.save()
+        **Methods**
         
-        **Processed image** ::
+        * ``file_url`` — Returns URL of the uploaded file as a string
+        * ``file_link`` — Returns an HTML link to the URL of the uploaded file as a string
+        * ``proxy_url`` — Returns proxy URL for the uploaded file as a string (``PrivateDocument`` and ``PrivatePDF`` only)
+        * ``proxy_link`` — Returns an HTML link to the proxy URL for the uploaded file as a string (``PrivateDocument`` and ``PrivatePDF`` only)
+        * ``image_url`` — Returns URL of the processed image file as a string (``ProcessedImage`` only)
+        * ``image_link`` — Returns  an HTML link to the URL of the processed image file as a string (``ProcessedImage`` only)
         
-            from django_simple_file_handler.models import ProcessedImage
+        ---------------
+        Generating PDFs
+        ---------------
         
-            class MyModel(models.Model):
-                ...
-                image_instance = ProcessedImage(
-                    extra_text = 'Any associated text you might need (optional)',
-                    output_width = 200,
-                    output_height = 100,
-                    saved_file = file_from_your_app,
-                )
-                image_instance.save()
-            
-        The resized and/or cropped image can then be accessed at ``image_instance.processed_file``.
+        The example code below uses ``PublicPDF``, but ``PrivatePDF`` and ``TemporaryPDF`` work the same way. ::
         
-        **Public generated PDF** ::
+            generated_pdf = PublicPDF(
+                title = 'title of the generated PDF document',
+                extra_text = 'any additional text needed with the object',
+                template_location = 'path/to/your/html/template.html',
+                template_data = {
+                    'value_one': value_to_be_inserted_in_template,
+                    'value_two': value_to_be_inserted_in_template,
+                    'value_three': value_to_be_inserted_in_template,
+                },
+            )
+            generated_pdf.save()
         
-            from django_simple_file_handler.models import PublicPDF
-        
-            class MyModel(models.Model):
-                ...
-                kwargs = {
-                    'template_location' : 'path/to/your/html_template.html',
-                    'data' : {
-                        'value_one': 'First value in your HTML template',
-                        'value_two': 'Second value in your HTML template',
-                        'value_three': 'Third value in your HTML template',
-                    },
-                }
-                generated_pdf = PublicPDF(
-                    title = 'PDF file title',
-                    extra_text = 'Any associated text you might need (optional)',
-                    **kwargs,
-                )
-                generated_pdf.save()
-        
-        **Private generated PDF** ::
-        
-            from django_simple_file_handler.models import PrivatePDF
-        
-            class MyModel(models.Model):
-                ...
-                kwargs = {
-                    'template_location' : 'path/to/your/html_template.html',
-                    'data' : {
-                        'value_one': 'Whatever value you need in your HTML template',
-                        'value_two': 'Whatever value you need in your HTML template',
-                        'value_three': 'Whatever value you need in your HTML template',
-                    },
-                }
-                generated_pdf = PrivatePDF(
-                    title = 'PDF file title',
-                    extra_text = 'Any associated text you might need (optional)',
-                    **kwargs,
-                )
-                generated_pdf.save()
-        
-        The proxy URL would then be accessed at ``generated_pdf.proxy_url``.
-        
-        **Temporary generated PDF** ::
-        
-            from django_simple_file_handler.models import TemporaryPDF
-        
-            class MyModel(models.Model):
-                ...
-                kwargs = {
-                    'template_location' : 'path/to/your/html_template.html',
-                    'data' : {
-                        'value_one': 'First value in your HTML template',
-                        'value_two': 'Second value in your HTML template',
-                        'value_three': 'Third value in your HTML template',
-                    },
-                }
-                generated_pdf = TemporaryPDF(
-                    title = 'PDF file title',
-                    extra_text = 'Any associated text you might need (optional)',
-                    **kwargs,
-                )
-                generated_pdf.save()
+        Database object attributes can then be changed without rewriting the PDF file. The file is only written when the ``template_data`` dictionary is given and the object resaved.
         
         ----------
         File types
         ----------
         
-        Supported document formats include PDF, ZIP, Word, Excel and PowerPoint. Supported image formats include PNG, JPEG, GIF and TIFF (source for processed images only). Some generic MIME types have been included due to limitations of libmagic in identifying Microsoft Office file formats.
+        Supported document formats include PDF, ZIP, Word, Excel and PowerPoint. Supported image formats include PNG, JPEG, GIF and TIFF (processed images only).
         
-        To support different file types, initialize your model with your own dictionary of allowed attributes: ::
+        To support different file types, subclass the relevant model and initialize your model with your own dictionary of allowed attributes. ::
+        
+            from django_simple_file_handler.models import PublicDocument
         
             ...
+            class MyPublicDocument(PublicDocument):
                 def __init__(self, *args, **kwargs):
                     super().__init__(*args, **kwargs)
                     self._meta.get_field('saved_file').validators = [
                         CheckExtMIME(allowed_attributes=MY_DICTIONARY),
                     ]
+        
+        Note that this validator will not appear in database migrations, which is intentional.
         
         The dictionary's format can optionally include arguments for file extensions, MIME types and verbose names for file formats (these will appear in error messages if given). Here is an example: ::
         
@@ -180,11 +146,26 @@ Description: ==========================
                     'image/example3',
                 ],
                 'allowed_verbose' : [
-                    'Format name 1',
-                    'Format name 2',
-                    'Format name 3',
+                    'Format1',
+                    'Format2',
+                    'Format3',
                 ],
             }
+        
+        --------------
+        File locations
+        --------------
+        
+        If you wish to change the locations where files are stored, subclass the relevant model and change the relevant attributes as in this example: ::
+        
+            from django_simple_file_handler import ProcessedImage
+        
+            ...
+            class MyProcessedImage(ProcessedImage):
+                subdirectory_path = 'path/to/save/location/'
+                image_path = 'path/to/save/location/'
+        
+        Note that the ``image_path`` attribute only applies to ``ProcessedImage``.
         
         ----------------
         Image attributes
@@ -201,23 +182,11 @@ Description: ==========================
                 file_format = 'GIF'
                 file_extension = 'gif'
         
-        --------------
-        File locations
-        --------------
-        
-        If you wish to change the locations where documents, images or generated PDFs are stored, subclass the relevant model and change the attribute as in this example: ::
-        
-            from django_simple_file_handler import ProcessedImage
-        
-            ...
-            class MyProcessedImage(ProcessedImage):
-                subdirectory_path = 'path/to/save/location/'
-        
         ------------
         Advanced use
         ------------
         
-        The django-simple-file-handler models are assembled from reusable mixins and functions that can of course, imported for use with your own code.
+        The django-simple-file-handler models make use of modular, reusable mixins and functions that can, of course, be imported for use with your own code.
         
 Platform: UNKNOWN
 Classifier: Environment :: Web Environment

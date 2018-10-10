@@ -1,75 +1,68 @@
 CHECK_DOC = {
     'allowed_extensions' : [
-        'pdf',
-        'doc',
         'docx',
-        'xls',
-        'xlsx',
-        'ppt',
+        'pdf',
         'pptx',
+        'xlsx',
+        'zip',
     ],
     'allowed_mimetypes' : [
         'application/pdf',
-        'application/zip',
-        'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-powerpoint',
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'application/CDFV2',
-        'application/CDFV2-unknown',
         'application/xml',
+        'application/zip',
     ],
     'allowed_verbose' : [
-        'PDF',
-        'ZIP',
-        'Word',
         'Excel',
+        'PDF',
         'PowerPoint',
+        'Word',
+        'ZIP',
     ],
 }
 
 
 CHECK_WEB_IMAGE = {
     'allowed_extensions' : [
-        'png',
+        'gif',
         'jpg',
         'jpeg',
-        'gif',
+        'png',
     ],
     'allowed_mimetypes' : [
-        'image/png',
-        'image/jpeg',
         'image/gif',
+        'image/jpeg',
+        'image/png',
     ],
     'allowed_verbose' : [
-        'PNG',
-        'JPEG',
         'GIF',
+        'JPEG',
+        'PNG',
     ],
 }
 
 
 CHECK_RAW_IMAGE = {
     'allowed_extensions' : [
-        'png',
+        'gif',
         'jpg',
         'jpeg',
-        'gif',
+        'png',
         'tif',
         'tiff',
     ],
     'allowed_mimetypes' : [
-        'image/png',
-        'image/jpeg',
         'image/gif',
+        'image/jpeg',
+        'image/png',
         'image/tiff',
     ],
     'allowed_verbose' : [
-        'PNG',
-        'JPEG',
         'GIF',
+        'JPEG',
+        'PNG',
         'TIFF',
     ],
 }

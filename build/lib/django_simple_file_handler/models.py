@@ -1,15 +1,11 @@
 from django.core.exceptions import (
     ObjectDoesNotExist,
 )
+from django.core.files.base import (
+    ContentFile,
+)
 from django.db import (
     models,
-)
-from django.db.models.signals import (
-    pre_delete,
-    pre_save,
-)
-from django.dispatch.dispatcher import (
-    receiver,
 )
 from django.urls import (
     reverse,
@@ -18,8 +14,9 @@ from django.urls import (
 
 from .dictionaries import *
 from .functions import *
-from .storage import *
-from .validators import *
+from .validators import (
+    CheckExtMIME,
+)
 
 
 class BaseMixin(models.Model):
@@ -40,31 +37,68 @@ class BaseMixin(models.Model):
     )
     saved_file = models.FileField(
         'uploaded file',
-        storage=RemoveOldFile(),
         upload_to=create_file_path,
         validators=[],
         max_length=254,
     )
     def file_url(self):
         if self.saved_file:
-            return '{0}' .format(self.saved_file.url)
+            return '{}' .format(self.saved_file.url)
         else:
             return 'No file'
     file_url.short_description = 'file URL'
     def file_link(self):
         if self.saved_file:
-            return '<a href="{0}" target="_blank">File link</a>' .format(self.file_url())
+            return '<a href="{}" target="_blank">File link</a>' .format(self.file_url())
         else:
             return 'No file'
     file_link.short_description = 'file link'
     file_link.allow_tags = True
+    check_fields = [
+        'saved_file',
+    ]
+    def get_saved_object(self):
+        try:
+            saved_object = self.__class__.objects.get(pk=self.pk)
+        except ObjectDoesNotExist:
+            saved_object = None
+        return saved_object
+    def save(self, *args, **kwargs):
+        saved_object = self.get_saved_object()
+        if saved_object is not None:
+            for field in self.check_fields:
+                if getattr(self, field) != getattr(saved_object, field):
+                    getattr(saved_object, field).delete(False)
+        super().save(*args, **kwargs)
+    class Meta:
+        abstract = True
+
+
+class PDFMixin(models.Model):
+    def __init__(self, *args, **kwargs):
+        self.template_data = kwargs.pop('template_data',{})
+        super().__init__(*args, **kwargs)
+    template_location = models.TextField(
+        blank=True,
+        null=True,
+    )
+    def save(self, *args, **kwargs):
+        if self.template_data:
+            self.saved_file.delete(False)
+            self.saved_file = create_pdf(
+                self.generated_name,
+                self.template_location,
+                self.template_data,
+            )
+            self.template_data={}
+        super().save(*args, **kwargs)
     class Meta:
         abstract = True
 
 
 class TitledMixin(models.Model):
     title = models.CharField(
-        max_length=254,
+        max_length=245,
         blank=False,
         unique=True,
     )
@@ -76,7 +110,12 @@ class TitledMixin(models.Model):
 
 class PublicMixin(models.Model):
     def save(self, *args, **kwargs):
-        self.generated_name = create_slug(self.title)
+        saved_object = self.get_saved_object()
+        if saved_object is not None:
+            if self.title != saved_object.title:
+                self.generated_name = create_slug(self.title)
+        else:
+            self.generated_name = create_slug(self.title)
         super().save(*args, **kwargs)
     class Meta:
         abstract = True
@@ -101,13 +140,19 @@ class PrivateMixin(models.Model):
     proxy_url.short_description = 'proxy URL'
     def proxy_link(self):
         if self.saved_file:
-            return '<a href="{0}" target="_blank">Proxy link</a>' .format(self.proxy_url())
+            return '<a href="{}" target="_blank">Proxy link</a>' .format(self.proxy_url())
         else:
             return 'No file'
     proxy_link.short_description = 'proxy link'
     proxy_link.allow_tags = True
     def save(self, *args, **kwargs):
-        if self.saved_file:
+        if not self.generated_name:
+            self.generated_name = create_key(128)
+        saved_object = self.get_saved_object()
+        if saved_object is not None:
+            if self.title != saved_object.title:
+                self.proxy_slug = create_proxy(self)
+        else:
             self.proxy_slug = create_proxy(self)
         super().save(*args, **kwargs)
     class Meta:
@@ -116,29 +161,36 @@ class PrivateMixin(models.Model):
 
 class TemporaryMixin(models.Model):
     def save(self, *args, **kwargs):
-        self.generated_name = create_slug_with_key(self.title)
+        saved_object = self.get_saved_object()
+        if saved_object is not None:
+            if self.title != saved_object.title:
+                self.generated_name = create_slug_with_key(self.title)
+        else:
+            self.generated_name = create_slug_with_key(self.title)
         super().save(*args, **kwargs)
     class Meta:
         abstract = True
 
 
-class PDFMixin(BaseMixin):
-    def __init__(self, *args, **kwargs):
-        self.template_location = kwargs.pop('template_location','')
-        self.data = kwargs.pop('data',{})
-        super().__init__(*args, **kwargs)
+class RenameMixin(models.Model):
     def save(self, *args, **kwargs):
-        self.saved_file = create_pdf(
-            self.generated_name,
-            self.template_location,
-            self.data,
-        )
+        saved_object = self.get_saved_object()
+        if saved_object is not None:
+            if self.generated_name != saved_object.generated_name:
+                try:
+                    old_file = saved_object.saved_file
+                    new_file = ContentFile(old_file.read())
+                    new_file.name = old_file.name
+                    old_file.delete(False)
+                    self.saved_file = new_file
+                except FileNotFoundError:
+                    pass
         super().save(*args, **kwargs)
     class Meta:
         abstract = True
 
 
-class PublicDocument(BaseMixin, TitledMixin, PublicMixin):
+class PublicDocument(BaseMixin, TitledMixin, PublicMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field('saved_file').validators = [
@@ -158,15 +210,12 @@ class PrivateDocument(BaseMixin, TitledMixin, PrivateMixin):
         ]
     subdirectory_path = 'documents/private/'
     proxy_reverse = 'django_simple_file_handler:proxy_document'
-    def save(self, *args, **kwargs):
-        self.generated_name = create_key(128)
-        super().save(*args, **kwargs)
     class Meta:
         verbose_name = 'document (private)'
         verbose_name_plural = 'documents (private)'
 
 
-class TemporaryDocument(BaseMixin, TitledMixin, TemporaryMixin):
+class TemporaryDocument(BaseMixin, TitledMixin, TemporaryMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field('saved_file').validators = [
@@ -178,7 +227,7 @@ class TemporaryDocument(BaseMixin, TitledMixin, TemporaryMixin):
         verbose_name_plural = 'documents (temporary)'
 
 
-class UnprocessedImage(BaseMixin, TitledMixin, PublicMixin):
+class UnprocessedImage(BaseMixin, TitledMixin, PublicMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field('saved_file').validators = [
@@ -205,24 +254,28 @@ class ProcessedImage(BaseMixin):
         null=True,
     )
     processed_file = models.FileField(
-        storage=RemoveOldFile(),
-        upload_to='images/processed/',
+        upload_to=create_image_path,
         blank=True,
         null=True,
     )
     subdirectory_path = 'images/raw/'
+    image_path = 'images/processed/'
     output_mode = 'RGB'
     content_type = 'image/png'
     file_format = 'PNG'
     file_extension = 'png'
+    check_fields = [
+        'saved_file',
+        'processed_file',
+    ]
     def image_url(self):
         if self.saved_file:
-            return '{0}' .format(self.processed_file.url)
+            return '{}' .format(self.processed_file.url)
         else:
             return 'No file'
     def image_link(self):
         if self.saved_file:
-            return '<a href="{0}" target="_blank">Image link</a>' .format(self.image_url())
+            return '<a href="{}" target="_blank">Image link</a>' .format(self.image_url())
         else:
             return 'No file'
     image_link.short_description = 'image link'
@@ -235,8 +288,8 @@ class ProcessedImage(BaseMixin):
             self.file_format,
             self.file_extension,
         ]
-        try:
-            saved_object = ProcessedImage.objects.get(pk=self.pk)
+        saved_object = self.get_saved_object()
+        if saved_object is not None:
             changeable_fields = [
                 'saved_file',
                 'output_width',
@@ -244,18 +297,18 @@ class ProcessedImage(BaseMixin):
             ]
             for field in changeable_fields:
                 if getattr(self, field) != getattr(saved_object, field):
-                    self.processed_file=process_image(*image_args)
+                    self.processed_file = process_image(*image_args)
                     break
-        except ObjectDoesNotExist:
+        else:
             self.generated_name = create_key(length=32)
-            self.processed_file=process_image(*image_args)
+            self.processed_file = process_image(*image_args)
         super().save(*args, **kwargs)
     class Meta:
         verbose_name = 'image (processed)'
         verbose_name_plural = 'images (processed)'
 
 
-class PublicPDF(PublicMixin, PDFMixin, TitledMixin):
+class PublicPDF(BaseMixin, PDFMixin, TitledMixin, PublicMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     subdirectory_path = 'pdf/public/'
@@ -264,129 +317,20 @@ class PublicPDF(PublicMixin, PDFMixin, TitledMixin):
         verbose_name_plural = 'PDFs (public)'
 
 
-class PrivatePDF(PDFMixin, TitledMixin, PrivateMixin):
+class PrivatePDF(BaseMixin, PDFMixin, TitledMixin, PrivateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     subdirectory_path = 'pdf/private/'
     proxy_reverse = 'django_simple_file_handler:proxy_pdf'
-    def save(self, *args, **kwargs):
-        self.generated_name = create_key(length=128)
-        super().save(*args, **kwargs)
     class Meta:
         verbose_name = 'PDF (private)'
         verbose_name_plural = 'PDFs (private)'
 
 
-class TemporaryPDF(TemporaryMixin, PDFMixin, TitledMixin):
+class TemporaryPDF(BaseMixin, PDFMixin, TitledMixin, TemporaryMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     subdirectory_path = 'pdf/temporary/'
     class Meta:
         verbose_name = 'PDF (temporary)'
         verbose_name_plural = 'PDFs (temporary)'
-
-
-@receiver(
-    pre_save,
-    sender=PublicDocument,
-)
-@receiver(
-    pre_save,
-    sender=PrivateDocument,
-)
-@receiver(
-    pre_save,
-    sender=TemporaryDocument,
-)
-@receiver(
-    pre_save,
-    sender=UnprocessedImage,
-)
-@receiver(
-    pre_save,
-    sender=PublicPDF,
-)
-@receiver(
-    pre_save,
-    sender=PrivatePDF,
-)
-@receiver(
-    pre_save,
-    sender=TemporaryPDF,
-)
-def saved_file_compare(sender, instance, **kwargs):
-    file_compare(
-        instance,
-        fields=[
-            'saved_file',
-        ],
-        **kwargs,
-    )
-
-
-@receiver(
-    pre_save,
-    sender=ProcessedImage,
-)
-def processed_file_compare(sender, instance, **kwargs):
-    file_compare(
-        instance,
-        fields=[
-            'saved_file',
-            'processed_file',
-        ],
-        **kwargs,
-    )
-
-
-@receiver(
-    pre_delete,
-    sender=PublicDocument,
-)
-@receiver(
-    pre_delete,
-    sender=PrivateDocument,
-)
-@receiver(
-    pre_delete,
-    sender=TemporaryDocument,
-)
-@receiver(
-    pre_delete,
-    sender=UnprocessedImage,
-)
-@receiver(
-    pre_delete,
-    sender=PublicPDF,
-)
-@receiver(
-    pre_delete,
-    sender=PrivatePDF,
-)
-@receiver(
-    pre_delete,
-    sender=TemporaryPDF,
-)
-def saved_file_delete(sender, instance, **kwargs):
-    file_delete(
-        instance,
-        fields=[
-            'saved_file',
-        ],
-        **kwargs,
-    )
-
-
-@receiver(
-    pre_delete,
-    sender=ProcessedImage,
-)
-def processed_file_delete(sender, instance, **kwargs):
-    file_delete(
-        instance,
-        fields=[
-            'saved_file',
-            'processed_file',
-        ],
-        **kwargs,
-    )

@@ -14,11 +14,11 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django_simple_file_handler',
-    version='0.1.5',
+    version='0.1.6',
     packages=find_packages(),
     include_package_data=True,
     license='MIT License',
-    description='A Django app for uploading documents and images',
+    description='A Django app for storing and processing documents and images',
     long_description=README,
     url='http://www.jonathanrickard.com/',
     author='Jonathan Rickard',
