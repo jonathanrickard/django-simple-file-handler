@@ -2,7 +2,7 @@
 django-simple-file-handler
 ==========================
 
-The django-simple-file-handler package is an app for uploading and managing documents and images. With optional packages installed, it can process images and generate PDFs from HTML files. It only has been tested with Django 1.11 and Python 3.6.
+The django-simple-file-handler package is an app for uploading and managing documents and images. With optional packages installed, it can process images and generate PDFs from HTML files.
 
 If python-magic is installed, django-simple-file-handler will use it to check uploaded file MIME types. Otherwise, it will use Python's built-in library. This package only has been tested with python-magic 0.4.
 
