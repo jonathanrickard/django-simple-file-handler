@@ -99,7 +99,6 @@ class PDFMixin(models.Model):
 class TitledMixin(models.Model):
     title = models.CharField(
         max_length=245,
-        blank=False,
         unique=True,
     )
     def __str__(self):
@@ -221,6 +220,9 @@ class TemporaryDocument(BaseMixin, TitledMixin, TemporaryMixin, RenameMixin):
         self._meta.get_field('saved_file').validators = [
             CheckExtMIME(allowed_attributes=CHECK_DOC),
         ]
+    title = models.CharField(
+        max_length=245,
+    )
     subdirectory_path = 'documents/temporary/'
     class Meta:
         verbose_name = 'document (temporary)'
@@ -330,6 +332,9 @@ class PrivatePDF(BaseMixin, PDFMixin, TitledMixin, PrivateMixin):
 class TemporaryPDF(BaseMixin, PDFMixin, TitledMixin, TemporaryMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    title = models.CharField(
+        max_length=245,
+    )
     subdirectory_path = 'pdf/temporary/'
     class Meta:
         verbose_name = 'PDF (temporary)'
