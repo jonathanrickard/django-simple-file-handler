@@ -94,12 +94,14 @@ class ReadOnlyMethodsAdmin(admin.ModelAdmin):
         return super().change_view(request, object_id, form_url, more_context)
 
 
-class PrivateAdmin(admin.ModelAdmin):
-    list_display = [
-        'title',
-        'proxy_link',
-        'updated',
-    ]
+class PrivateAdmin(BaseAdmin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.list_display = [
+            'title',
+            'proxy_link',
+            'updated',
+        ]
 
 
 class PublicDocumentForm(BaseForm):
@@ -122,7 +124,7 @@ class PrivateDocumentForm(BaseForm):
         model = PrivateDocument
 
 
-class PrivateDocumentAdmin(BaseAdmin, AdditionalFieldsAdmin, PrivateAdmin):
+class PrivateDocumentAdmin(PrivateAdmin, AdditionalFieldsAdmin):
     form = PrivateDocumentForm
 
 
@@ -212,7 +214,7 @@ admin.site.register(
 )
 
 
-class PrivatePDFAdmin(BaseAdmin, AdditionalFieldsAdmin, ReadOnlyFieldsAdmin, ReadOnlyMethodsAdmin, PrivateAdmin):
+class PrivatePDFAdmin(PrivateAdmin, AdditionalFieldsAdmin, ReadOnlyFieldsAdmin, ReadOnlyMethodsAdmin):
     pass
 
 
