@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: django-simple-file-handler
-Version: 0.1.8
+Version: 0.1.9
 Summary: A Django app for storing and processing documents and images
 Home-page: http://www.jonathanrickard.com/
 Author: Jonathan Rickard
@@ -10,15 +10,9 @@ Description: ==========================
         django-simple-file-handler
         ==========================
         
-        The django-simple-file-handler package is an app for uploading and managing documents and images. With optional packages installed, it can process images and generate PDFs from HTML files.
+        The django-simple-file-handler Django app uploads and manages documents and images. It is most useful when used to add these functions to your own apps, and it can also be used to add image processing and PDF generation from HTML templates.
         
-        If python-magic is installed, django-simple-file-handler will use it to check uploaded file MIME types. Otherwise, it will use Python's built-in library. This package only has been tested with python-magic 0.4.
-        
-        Please note that "private" files and PDFs would be more accurately described as "hidden." The app generates a proxy URL that will load the file for a logged-in user and stores the file with a name consisting of many random characters. Still, it is possible to load these files without logging in if the file name is known.
-        
-        Processed image generation requires that Pillow be installed. This package only has been tested with Pillow 5.0.
-        
-        PDF generation requires that either WeasyPrint or xhtml2pdf be installed. This package only has been tested with WeasyPrint 0.28 and xhtml2pdf 0.2.1. Please refer to those projects' documentation for HTML template-formatting specifics.
+        Please note that "private" files and PDFs would be more accurately described as "hidden." The app generates a proxy URL that will load the file for a logged-in user and stores the file with a name consisting of many random characters. Still, it is possible to load these files without logging in if the file path is known.
         
         -----------
         Quick start
@@ -74,14 +68,8 @@ Description: ==========================
         * ``extra_text`` — ``TextField`` (optional)
         * ``saved_file`` — ``FileField`` for the uploaded file
         * ``processed_file`` — ``FileField`` for processed image (``ProcessedImage`` only)
-        * ``output_width`` — ``PositiveIntegerField`` (``ProcessedImage`` only)
-        * ``output_height`` — ``PositiveIntegerField`` (``ProcessedImage`` only)
-        * ``subdirectory_path`` — String containing the path used by ``saved_file``
-        * ``image_path`` — String containing the path used by ``processed_file`` (``ProcessedImage`` only)
-        * ``output_mode`` — String used by Pillow (``ProcessedImage`` only)
-        * ``content_type`` — String used by Pillow (``ProcessedImage`` only)
-        * ``file_format`` — String used by Pillow (``ProcessedImage`` only)
-        * ``file_extension`` — String used by Pillow (``ProcessedImage`` only)
+        * ``output_width`` — ``PositiveIntegerField`` for processed image width in pixels (``ProcessedImage`` only)
+        * ``output_height`` — ``PositiveIntegerField`` for processed image height in pixels (``ProcessedImage`` only)
         
         **Methods**
         
@@ -91,18 +79,45 @@ Description: ==========================
         * ``proxy_link`` — Returns an HTML link to the proxy URL for the uploaded file as a string (``PrivateDocument`` and ``PrivatePDF`` only)
         * ``image_url`` — Returns URL of the processed image file as a string (``ProcessedImage`` only)
         * ``image_link`` — Returns  an HTML link to the URL of the processed image file as a string (``ProcessedImage`` only)
+        * ``image_height`` — Returns an integer for the height of the processed image in pixels. (``ProcessedImage`` only)
+        * ``image_width`` — Returns an integer for the width of the processed image in pixels. (``ProcessedImage`` only)
+        * ``saved_file_height`` — Returns an integer for the height of the source image in pixels. (``ProcessedImage`` only)
+        * ``saved_file_width`` — Returns an integer for the width of the source image in pixels. (``ProcessedImage`` only)
+        
+        ----------------
+        Processed images
+        ----------------
+        
+        Refer to Pillow documentation for allowed import formats or see the section below on file types to limit them in your forms.
+        
+        Images are processed when an instance is saved with a file assigned to the ``saved_file`` field and a value for one or both of the ``output_width`` and ``output_height`` fields. If one value is given, the image will be scaled proportionally. If both are supplied and they do not match the proportions of the source image, the image will be scaled and cropped on either the bottom or right side, depending on whether the source image is horizontal or vertical.
+        
+        The processed image is stored in the ``processed_file`` field. Refer to the attributes and methods list above for additional information.
+        
+        By default, images are processed into PNGs with RGB mode. To change one or more of the output parameters, add a ``FILE_HANDLER_PILLOW`` setting with a dictionary containing parameters you wish to change, as in this example: ::
+        
+            FILE_HANDLER_PILLOW = {
+                'output_mode': 'P',
+                'content_type': 'image/gif',
+                'file_format': 'GIF',
+                'file_extension': 'gif',
+            }
+        
+        Refer to Pillow documentation for options for these parameters.
         
         ---------------
         Generating PDFs
         ---------------
         
+        PDF generation will use WeasyPrint if it is installed and ``FILE_HANDLER_WEASYPRINT = True`` is present in Django settings. Otherwise, it will use xhtml2pdf, which wil be installed if not present. This app has been tested with WeasyPrint 0.28. Please refer to xhtml2pdf or WeasyPrint documentation for HTML template-formatting specifics.
+        
         The example code below uses ``PublicPDF``, but ``PrivatePDF`` and ``TemporaryPDF`` work the same way. ::
         
             generated_pdf = PublicPDF(
-                title = 'title of the generated PDF document',
-                extra_text = 'any additional text needed with the object',
-                template_location = 'path/to/your/html/template.html',
-                template_data = {
+                title='title of the generated PDF document',
+                extra_text='any additional text needed with the object',
+                template_location='path/to/your/html/template.html',
+                template_data={
                     'value_one': value_to_be_inserted_in_template,
                     'value_two': value_to_be_inserted_in_template,
                     'value_three': value_to_be_inserted_in_template,
@@ -110,29 +125,32 @@ Description: ==========================
             )
             generated_pdf.save()
         
-        Database object attributes can then be changed without rewriting the PDF file. The file is only written when the ``template_data`` dictionary is given and the object resaved.
+        Database object attributes can then be changed without rewriting the PDF file. The file is only written when the ``template_data`` dictionary is given and the object is resaved.
         
-        ----------
-        File types
-        ----------
+        ------------
+        File formats
+        ------------
         
-        Supported document formats include PDF, ZIP, Word, Excel and PowerPoint. Supported image formats include PNG, JPEG, GIF and TIFF (processed images only).
+        If python-magic is installed, django-simple-file-handler will use it to check uploaded file MIME types. Otherwise, it will use Python's built-in library. This package has been tested with python-magic 0.4.
         
-        To support different file types, subclass the relevant model and initialize your model with your own dictionary of allowed attributes. ::
+        Supported document formats include PDF, ZIP, Word, Excel and PowerPoint. Supported unprocessed image formats include PNG, JPEG and GIF.
         
-            from django_simple_file_handler.models import PublicDocument
+        To support different file types, follow this example for your form: ::
         
-            ...
-            class MyPublicDocument(PublicDocument):
+            class MyForm(ModelForm):
                 def __init__(self, *args, **kwargs):
                     super().__init__(*args, **kwargs)
-                    self._meta.get_field('saved_file').validators = [
-                        CheckExtMIME(allowed_attributes=MY_DICTIONARY),
+                    self.fields['saved_file'].validators.append(CheckExtMIME(allowed_attributes=MY_DICTIONARY))
+        
+                class Meta:
+                    model = PublicDocument
+                    fields = [
+                        'title',
+                        'extra_text',
+                        'saved_file',
                     ]
         
-        Note that this validator will not appear in database migrations, which is intentional.
-        
-        The dictionary's format can optionally include arguments for file extensions, MIME types and verbose names for file formats (these will appear in error messages if given). Here is an example: ::
+        The dictionary's format can optionally include keys with list values for file extensions, MIME types and verbose names for file formats (these will appear in error messages if given). Here is an example: ::
         
             MY_DICTIONARY = {
                 'allowed_extensions' : [
@@ -152,41 +170,25 @@ Description: ==========================
                 ],
             }
         
+        Dictionaries included in ``django_simple_file_handler.file_types`` include:
+        
+        * ``CHECK_DOC`` — Allows ZIP, Word, Excel and PowerPoint.
+        * ``CHECK_WEB_IMAGE`` — Allows GIF, JPEG and PNG.
+        * ``CHECK_RAW_IMAGE`` — Allows GIF, JPEG, PNG and TIFF.
+        * ``CHECK_PDF`` — Allows PDF only.
+        * ``CHECK_ALL_WEB`` — Allows GIF, JPEG, PNG ZIP, Word, Excel and PowerPoint.
+        
         --------------
         File locations
         --------------
         
-        If you wish to change the locations where files are stored, subclass the relevant model and change the relevant attributes as in this example: ::
-        
-            from django_simple_file_handler import ProcessedImage
-        
-            ...
-            class MyProcessedImage(ProcessedImage):
-                subdirectory_path = 'path/to/save/location/'
-                image_path = 'path/to/save/location/'
-        
-        Note that the ``image_path`` attribute only applies to ``ProcessedImage``.
-        
-        ----------------
-        Image attributes
-        ----------------
-        
-        By default, images are processed into PNG format with RGB data. To use something else, subclass the ProcessedImage model and change the attributes as in this example: ::
-        
-            from django_simple_file_handler.models import ProcessedImage
-        
-            ...
-            class MyProcessedImage(ProcessedImage):
-                output_mode = 'P'
-                content_type = 'image/gif'
-                file_format = 'GIF'
-                file_extension = 'gif'
+        By default, images will be stored in your ``media`` directory in subdirectories named ``documents``, ``images`` and ``pdf``. If you wish to change the directory where these subdirectories are created, add ``FILE_HANDLER_DIRECTORY = 'path/to/location/'`` to your settings.
         
         ------------
         Advanced use
         ------------
         
-        The django-simple-file-handler models make use of modular, reusable mixins and functions that can, of course, be imported for use with your own code.
+        The django-simple-file-handler models and admin classes make use of modular, reusable mixins and functions that can, of course, be imported for use with your own code.
         
 Platform: UNKNOWN
 Classifier: Environment :: Web Environment

@@ -8,6 +8,9 @@ from PIL import (
 )
 
 
+from django.conf import (
+    settings,
+)
 from django.contrib.auth.models import (
     User,
 )
@@ -22,12 +25,26 @@ from django.urls import (
 )
 
 
+def custom_subdirectory():
+    if hasattr(settings, 'FILE_HANDLER_DIRECTORY'):
+        return settings.FILE_HANDLER_DIRECTORY
+    else:
+        return ''
+
+
+def pillow_settings():
+    if hasattr(settings, 'FILE_HANDLER_PILLOW'):
+        return settings.FILE_HANDLER_PILLOW
+    else:
+        return {}
+
+
 def create_image_file():
     temp_handle = BytesIO()
     image_file = Image.new(
         'RGB',
-        (72,72),
-        (0,0,255),
+        (72, 72),
+        (0, 0, 255),
     )
     image_file.save(
         temp_handle,
@@ -51,9 +68,9 @@ def create_user():
 
 def create_document_instance(model_name):
     document_instance = model_name(
-        title = 'Test Document',
-        extra_text = 'Test extra text',
-        saved_file = SimpleUploadedFile(
+        title='Test Document',
+        extra_text='Test extra text',
+        saved_file=SimpleUploadedFile(
             'test_file.pdf',
             'test file content'.encode(),
             'application/pdf',
@@ -65,9 +82,9 @@ def create_document_instance(model_name):
 
 def create_unprocessed_image_instance(model_name):
     image_instance = model_name(
-        title = 'Test Image',
-        extra_text = 'Test extra text',
-        saved_file = create_image_file(),
+        title='Test Image',
+        extra_text='Test extra text',
+        saved_file=create_image_file(),
     )
     image_instance.save()
     return image_instance
@@ -75,10 +92,10 @@ def create_unprocessed_image_instance(model_name):
 
 def create_processed_image_instance(model_name):
     image_instance = model_name(
-        extra_text = 'Test extra text',
-        output_width = 200,
-        output_height = 100,
-        saved_file = create_image_file(),
+        extra_text='Test extra text',
+        output_width=200,
+        output_height=100,
+        saved_file=create_image_file(),
     )
     image_instance.save()
     return image_instance
@@ -86,10 +103,10 @@ def create_processed_image_instance(model_name):
 
 def create_pdf_instance(model_name):
     pdf_instance = model_name(
-        title = 'PDF file name',
-        extra_text = 'Test extra text',
-        template_location = 'django_simple_file_handler/tests/pdf_test.html',
-        template_data = {
+        title='PDF file name',
+        extra_text='Test extra text',
+        template_location='django_simple_file_handler/tests/pdf_test.html',
+        template_data={
             'title_name': 'Title of PDF',
             'test_value': 'A test value string',
         },

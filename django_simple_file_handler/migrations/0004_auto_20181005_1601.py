@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-import django_simple_file_handler.functions
+import django_simple_file_handler.models
 
 
 class Migration(migrations.Migration):
@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='processedimage',
             name='processed_file',
-            field=models.FileField(blank=True, null=True, upload_to=django_simple_file_handler.functions.create_image_path),
+            field=models.FileField(blank=True, null=True, upload_to=django_simple_file_handler.models.create_image_path),
         ),
         migrations.AlterField(
             model_name='publicdocument',

@@ -7,7 +7,10 @@ from ..models import (
     PrivateDocument,
     PrivatePDF,
 )
-from ..views import *
+from ..views import (
+    proxy_document,
+    proxy_pdf,
+)
 from .test_functions import (
     create_document_instance,
     create_pdf_instance,
@@ -19,9 +22,11 @@ class MixinWrap:
     class BaseMixin(TestCase):
         def setUp(self):
             self.response = create_response(self)
+
         def test_proxy(self):
             self.assertEqual(self.response.status_code, 200)
             self.assertEqual(self.response.content, self.test_instance.saved_file.read())
+
         def tearDown(self):
             self.test_instance.delete()
 
@@ -29,6 +34,7 @@ class MixinWrap:
 class PrivateDocumentViewTests(MixinWrap.BaseMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
     def setUp(self):
         self.test_instance = create_document_instance(PrivateDocument)
         self.test_view = proxy_document
@@ -39,6 +45,7 @@ class PrivateDocumentViewTests(MixinWrap.BaseMixin):
 class PrivatePDFViewTests(MixinWrap.BaseMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
     def setUp(self):
         self.test_instance = create_pdf_instance(PrivatePDF)
         self.test_view = proxy_pdf

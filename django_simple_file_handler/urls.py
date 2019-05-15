@@ -3,7 +3,10 @@ from django.conf.urls import (
 )
 
 
-from .views import *
+from .views import (
+    proxy_document,
+    proxy_pdf,
+)
 
 
 app_name = 'django_simple_file_handler'

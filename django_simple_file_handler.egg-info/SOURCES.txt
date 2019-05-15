@@ -6,8 +6,7 @@ setup.py
 django_simple_file_handler/__init__.py
 django_simple_file_handler/admin.py
 django_simple_file_handler/apps.py
-django_simple_file_handler/dictionaries.py
-django_simple_file_handler/functions.py
+django_simple_file_handler/file_types.py
 django_simple_file_handler/models.py
 django_simple_file_handler/runtests.py
 django_simple_file_handler/urls.py
@@ -22,6 +21,7 @@ django_simple_file_handler/migrations/0002_auto_20180521_1545.py
 django_simple_file_handler/migrations/0003_auto_20180525_1035.py
 django_simple_file_handler/migrations/0004_auto_20181005_1601.py
 django_simple_file_handler/migrations/0005_auto_20190124_1658.py
+django_simple_file_handler/migrations/0006_auto_20190429_1949.py
 django_simple_file_handler/migrations/__init__.py
 django_simple_file_handler/signals/__init__.py
 django_simple_file_handler/signals/handlers.py

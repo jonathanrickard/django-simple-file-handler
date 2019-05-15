@@ -14,7 +14,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django_simple_file_handler',
-    version='0.1.8',
+    version='0.1.9',
     packages=find_packages(),
     include_package_data=True,
     license='MIT License',
@@ -41,4 +41,6 @@ setup(
 
 install_requires=[
    'Django>=1.11,<2.0',
+   'Pillow>=5.0',
+   'xhtml2pdf>=0.2.3',
 ]

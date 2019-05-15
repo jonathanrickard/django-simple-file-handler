@@ -6,21 +6,23 @@ from django.contrib import (
 )
 
 
-from .models import *
-
-
-class BaseForm(forms.ModelForm):
-    title = forms.CharField(
-        error_messages={
-            'required': 'Please enter a title.',
-            'unique': 'This title is already in use.',
-        }
-    )
-    class Meta:
-        fields = [
-            'extra_text',
-            'saved_file',
-        ]
+from .file_types import (
+    CHECK_DOC,
+    CHECK_WEB_IMAGE,
+)
+from .models import (
+    PrivateDocument,
+    PrivatePDF,
+    ProcessedImage,
+    PublicDocument,
+    PublicPDF,
+    TemporaryDocument,
+    TemporaryPDF,
+    UnprocessedImage,
+)
+from .validators import (
+    CheckExtMIME,
+)
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -29,11 +31,28 @@ class BaseAdmin(admin.ModelAdmin):
         'title',
         'extra_text',
     ]
-    readonly_fields = [
+    basic_readonly_fields = [
         'created',
         'updated',
     ]
-    fieldsets = [
+    private_readonly_fields = [
+        'title',
+        'extra_text',
+        'saved_file',
+    ]
+    readonly_fields = basic_readonly_fields + private_readonly_fields
+    top_fieldsets = [
+        (
+            None, {
+                'fields': [
+                    'title',
+                    'extra_text',
+                    'saved_file',
+                ],
+            }
+        ),
+    ]
+    bottom_fieldsets = [
         (
             'Date and time information', {
                 'fields': [
@@ -42,10 +61,11 @@ class BaseAdmin(admin.ModelAdmin):
                 ],
                 'classes': [
                     'collapse',
-                ]
+                ],
             }
         ),
     ]
+    fieldsets = top_fieldsets + bottom_fieldsets
     list_display = [
         'title',
         'file_link',
@@ -57,35 +77,10 @@ class BaseAdmin(admin.ModelAdmin):
     list_per_page = 20
 
 
-class AdditionalFieldsAdmin(admin.ModelAdmin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fieldsets = [
-            (
-                None, {
-                    'fields': [
-                        'title',
-                        'extra_text',
-                        'saved_file',
-                    ]
-                }
-            ),
-        ] + self.fieldsets
-
-
-class ReadOnlyFieldsAdmin(admin.ModelAdmin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.readonly_fields = [
-            'title',
-            'extra_text',
-            'saved_file',
-        ] + self.readonly_fields
-
-
-class ReadOnlyMethodsAdmin(admin.ModelAdmin):
+class ReadOnlyAdmin(BaseAdmin):
     def has_add_permission(self, request, obj=None):
         return False
+
     def change_view(self, request, object_id, form_url='', extra_context=None):
         more_context = {
             'remove_buttons': True,
@@ -94,22 +89,31 @@ class ReadOnlyMethodsAdmin(admin.ModelAdmin):
         return super().change_view(request, object_id, form_url, more_context)
 
 
-class PrivateAdmin(BaseAdmin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.list_display = [
-            'title',
-            'proxy_link',
-            'updated',
+class BaseForm(forms.ModelForm):
+    title = forms.CharField(
+        error_messages={
+            'required': 'Please enter a title.',
+            'unique': 'This title is already in use.',
+        }
+    )
+
+    class Meta:
+        fields = [
+            'extra_text',
+            'saved_file',
         ]
 
 
 class PublicDocumentForm(BaseForm):
-    class Meta(BaseForm.Meta):
-        model = PublicDocument
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['saved_file'].validators.append(CheckExtMIME(allowed_attributes=CHECK_DOC))
 
 
-class PublicDocumentAdmin(BaseAdmin, AdditionalFieldsAdmin):
+class PublicDocumentAdmin(BaseAdmin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.readonly_fields = self.basic_readonly_fields
     form = PublicDocumentForm
 
 
@@ -120,12 +124,21 @@ admin.site.register(
 
 
 class PrivateDocumentForm(BaseForm):
-    class Meta(BaseForm.Meta):
-        model = PrivateDocument
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['saved_file'].validators.append(CheckExtMIME(allowed_attributes=CHECK_DOC))
 
 
-class PrivateDocumentAdmin(PrivateAdmin, AdditionalFieldsAdmin):
+class PrivateDocumentAdmin(BaseAdmin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.readonly_fields = self.basic_readonly_fields
     form = PrivateDocumentForm
+    list_display = [
+        'title',
+        'proxy_link',
+        'updated',
+    ]
 
 
 admin.site.register(
@@ -134,7 +147,7 @@ admin.site.register(
 )
 
 
-class TemporaryDocumentAdmin(BaseAdmin, AdditionalFieldsAdmin, ReadOnlyFieldsAdmin, ReadOnlyMethodsAdmin):
+class TemporaryDocumentAdmin(ReadOnlyAdmin):
     pass
 
 
@@ -145,11 +158,15 @@ admin.site.register(
 
 
 class UnprocessedImageForm(BaseForm):
-    class Meta(BaseForm.Meta):
-        model = UnprocessedImage
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['saved_file'].validators.append(CheckExtMIME(allowed_attributes=CHECK_WEB_IMAGE))
 
 
-class UnprocessedImageAdmin(BaseAdmin, AdditionalFieldsAdmin):
+class UnprocessedImageAdmin(BaseAdmin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.readonly_fields = self.basic_readonly_fields
     form = UnprocessedImageForm
 
 
@@ -159,31 +176,29 @@ admin.site.register(
 )
 
 
-class ProcessedImageAdmin(BaseAdmin, ReadOnlyMethodsAdmin):
+class ProcessedImageAdmin(ReadOnlyAdmin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.readonly_fields = [
-            'generated_name',
             'output_width',
             'output_height',
-            'extra_text',
             'processed_file',
+            'extra_text',
             'saved_file',
-        ] + self.readonly_fields
+        ] + self.basic_readonly_fields
         self.fieldsets = [
             (
                 None, {
                     'fields': [
-                        'generated_name',
+                        'processed_file',
+                        'saved_file',
                         'output_width',
                         'output_height',
                         'extra_text',
-                        'processed_file',
-                        'saved_file',
                     ]
                 }
             ),
-        ] + self.fieldsets
+        ] + self.bottom_fieldsets
     search_fields = [
         'generated_name',
         'extra_text',
@@ -204,7 +219,7 @@ admin.site.register(
 )
 
 
-class PublicPDFAdmin(BaseAdmin, AdditionalFieldsAdmin, ReadOnlyFieldsAdmin, ReadOnlyMethodsAdmin):
+class PublicPDFAdmin(ReadOnlyAdmin):
     pass
 
 
@@ -214,8 +229,12 @@ admin.site.register(
 )
 
 
-class PrivatePDFAdmin(PrivateAdmin, AdditionalFieldsAdmin, ReadOnlyFieldsAdmin, ReadOnlyMethodsAdmin):
-    pass
+class PrivatePDFAdmin(ReadOnlyAdmin):
+    list_display = [
+        'title',
+        'proxy_link',
+        'updated',
+    ]
 
 
 admin.site.register(
@@ -224,7 +243,7 @@ admin.site.register(
 )
 
 
-class TemporaryPDFAdmin(BaseAdmin, AdditionalFieldsAdmin, ReadOnlyFieldsAdmin, ReadOnlyMethodsAdmin):
+class TemporaryPDFAdmin(ReadOnlyAdmin):
     pass
 
 
