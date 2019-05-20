@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: django-simple-file-handler
-Version: 0.1.9
+Version: 0.1.9.1
 Summary: A Django app for storing and processing documents and images
 Home-page: http://www.jonathanrickard.com/
 Author: Jonathan Rickard
@@ -88,7 +88,7 @@ Description: ==========================
         Processed images
         ----------------
         
-        Refer to Pillow documentation for allowed import formats or see the section below on file types to limit them in your forms.
+        Refer to the `Pillow <https://github.com/python-pillow/Pillow>`_ documentation for allowed import formats or see the section below on file types to limit them in your forms.
         
         Images are processed when an instance is saved with a file assigned to the ``saved_file`` field and a value for one or both of the ``output_width`` and ``output_height`` fields. If one value is given, the image will be scaled proportionally. If both are supplied and they do not match the proportions of the source image, the image will be scaled and cropped on either the bottom or right side, depending on whether the source image is horizontal or vertical.
         
@@ -109,7 +109,7 @@ Description: ==========================
         Generating PDFs
         ---------------
         
-        PDF generation will use WeasyPrint if it is installed and ``FILE_HANDLER_WEASYPRINT = True`` is present in Django settings. Otherwise, it will use xhtml2pdf, which wil be installed if not present. This app has been tested with WeasyPrint 0.28. Please refer to xhtml2pdf or WeasyPrint documentation for HTML template-formatting specifics.
+        PDF generation will use `WeasyPrint <https://weasyprint.org/>`_ if it is installed and ``FILE_HANDLER_WEASYPRINT = True`` is present in Django settings. Otherwise, it will use `xhtml2pdf <https://github.com/xhtml2pdf/xhtml2pdf>`_, which wil be installed if not present. This app has been tested with WeasyPrint 0.28. Please refer to xhtml2pdf or WeasyPrint documentation for HTML template-formatting specifics.
         
         The example code below uses ``PublicPDF``, but ``PrivatePDF`` and ``TemporaryPDF`` work the same way. ::
         
@@ -131,7 +131,7 @@ Description: ==========================
         File formats
         ------------
         
-        If python-magic is installed, django-simple-file-handler will use it to check uploaded file MIME types. Otherwise, it will use Python's built-in library. This package has been tested with python-magic 0.4.
+        If `python-magic <https://github.com/ahupp/python-magic>`_ is installed, django-simple-file-handler will use it to check uploaded file MIME types. Otherwise, it will use Python's built-in library. This package has been tested with python-magic 0.4.
         
         Supported document formats include PDF, ZIP, Word, Excel and PowerPoint. Supported unprocessed image formats include PNG, JPEG and GIF.
         
