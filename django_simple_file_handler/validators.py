@@ -1,9 +1,6 @@
 from mimetypes import (
     guess_type,
 )
-from os.path import (
-    splitext,
-)
 
 
 from django.core.exceptions import (
@@ -28,7 +25,7 @@ class CheckExtMIME:
         self.allowed_verbose = allowed_attributes.get('allowed_verbose', self.allowed_mimetypes)
 
     def __call__(self, value):
-        ext = splitext(value.name)[1][1:].lower()
+        ext = value.name.rsplit('.', 1)[1].lower()
         ''' Check file extension '''
         if self.allowed_extensions and ext not in self.allowed_extensions:
             error_message = 'Allowed file extensions: {}.' .format(formatted_list(self.allowed_extensions))
