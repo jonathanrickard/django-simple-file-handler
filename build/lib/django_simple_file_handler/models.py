@@ -2,10 +2,6 @@ from io import (
     BytesIO,
 )
 import os
-from os.path import (
-    basename,
-    splitext,
-)
 from random import (
     choice,
 )
@@ -53,7 +49,7 @@ from xhtml2pdf import (
 def create_file_path(instance, filename):
     subdirectory = instance.subdirectory_path
     file_base = instance.generated_name
-    file_extension = splitext(filename)[1][1:].lower()
+    file_extension = filename.rsplit('.', 1)[1]
     return '{}{}.{}' .format(subdirectory, file_base, file_extension)
 
 
@@ -146,30 +142,16 @@ def create_file(file_name, content_type, temp_handle):
 
 
 def link_callback(url, rel):
-    if hasattr(settings, 'STATIC_URL'):
-        static_url = settings.STATIC_URL
-    else:
-        static_url = ''
-    if hasattr(settings, 'STATIC_ROOT'):
-        static_root = settings.STATIC_URL
-    else:
-        static_root = ''
-    if hasattr(settings, 'MEDIA_URL'):
-        media_url = settings.MEDIA_URL
-    else:
-        media_url = ''
-    if hasattr(settings, 'MEDIA_ROOT'):
-        media_root = settings.MEDIA_ROOT
-    else:
-        media_root = ''
-    if url.startswith(media_url):
+    static_url = settings.STATIC_URL
+    static_root = settings.STATIC_ROOT
+    media_url = settings.MEDIA_URL
+    media_root = settings.MEDIA_ROOT
+    if url.startswith(media_url) and media_root is not None:
         path = os.path.join(media_root, url.replace(media_url, ''))
-    elif url.startswith(static_url):
+    elif url.startswith(static_url) and static_root is not None:
         path = os.path.join(static_root, url.replace(static_url, ''))
     else:
         return url
-    if not os.path.isfile(path):
-        raise Exception('media URL must start with {} or {}' .format(static_url, media_url))
     return path
 
 
@@ -250,7 +232,7 @@ def create_key(length):
 
 def create_proxy(self):
     slug = create_slug(self.title)
-    file_extension = splitext(basename(self.saved_file.path))[1][1:]
+    file_extension = self.saved_file.url.rsplit('.', 1)[1]
     return '{}.{}' .format(slug, file_extension)
 
 
