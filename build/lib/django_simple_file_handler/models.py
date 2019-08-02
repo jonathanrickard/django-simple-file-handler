@@ -104,10 +104,12 @@ class BaseMixin(models.Model):
 
     def save(self, *args, **kwargs):
         saved_object = self.get_saved_object()
+        self.file_deleted = False
         if saved_object is not None:
             for field in self.check_fields:
                 if getattr(self, field) != getattr(saved_object, field):
                     getattr(saved_object, field).delete(False)
+                    self.file_deleted = True
         super().save(*args, **kwargs)
 
     class Meta:
@@ -298,14 +300,12 @@ class RenameMixin(models.Model):
         saved_object = self.get_saved_object()
         if saved_object is not None:
             if self.generated_name != saved_object.generated_name:
-                try:
+                if not self.file_deleted:
                     old_file = saved_object.saved_file
                     new_file = ContentFile(old_file.read())
                     new_file.name = old_file.name
                     old_file.delete(False)
                     self.saved_file = new_file
-                except FileNotFoundError:
-                    pass
         super().save(*args, **kwargs)
 
     class Meta:
