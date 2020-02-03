@@ -25,17 +25,21 @@ from django.urls import (
 )
 
 
-def custom_subdirectory():
-    if hasattr(settings, 'FILE_HANDLER_DIRECTORY'):
-        return settings.FILE_HANDLER_DIRECTORY
-    else:
-        return ''
+def custom_subdirectory(path):
+    try:
+        directory = settings.FILE_HANDLER_DIRECTORY
+    except AttributeError:
+        directory = ''
+    return '{}{}'.format(
+        directory,
+        path,
+    )
 
 
 def pillow_settings():
-    if hasattr(settings, 'FILE_HANDLER_PILLOW'):
+    try:
         return settings.FILE_HANDLER_PILLOW
-    else:
+    except AttributeError:
         return {}
 
 
@@ -67,7 +71,7 @@ def create_user():
 
 
 def create_document_instance(model_name):
-    document_instance = model_name(
+    document_instance = model_name.objects.create(
         title='Test Document',
         extra_text='Test extra text',
         saved_file=SimpleUploadedFile(
@@ -76,33 +80,30 @@ def create_document_instance(model_name):
             'application/pdf',
         ),
     )
-    document_instance.save()
     return document_instance
 
 
 def create_unprocessed_image_instance(model_name):
-    image_instance = model_name(
+    image_instance = model_name.objects.create(
         title='Test Image',
         extra_text='Test extra text',
         saved_file=create_image_file(),
     )
-    image_instance.save()
     return image_instance
 
 
 def create_processed_image_instance(model_name):
-    image_instance = model_name(
+    image_instance = model_name.objects.create(
         extra_text='Test extra text',
         output_width=200,
         output_height=100,
         saved_file=create_image_file(),
     )
-    image_instance.save()
     return image_instance
 
 
 def create_pdf_instance(model_name):
-    pdf_instance = model_name(
+    pdf_instance = model_name.objects.create(
         title='PDF file name',
         extra_text='Test extra text',
         template_location='django_simple_file_handler/tests/pdf_test.html',
@@ -111,7 +112,6 @@ def create_pdf_instance(model_name):
             'test_value': 'A test value string',
         },
     )
-    pdf_instance.save()
     return pdf_instance
 
 
@@ -128,3 +128,18 @@ def create_response(self):
 
 def attribute_exists(instance_attribute):
     return instance_attribute is not None
+
+
+def status_code_equals(self, attr_name, status_code):
+    error_msg = "For view '{}', the status code returned was not '{}'".format(
+        attr_name,
+        str(status_code),
+    )
+    self.assertEqual(self.response.status_code, status_code, error_msg)
+
+
+def file_equals(self, attr_name):
+    error_msg = "For view '{}', the assigned file was not returned".format(
+        attr_name,
+    )
+    self.assertEqual(self.response.content, self.test_instance.saved_file.read(), error_msg)
