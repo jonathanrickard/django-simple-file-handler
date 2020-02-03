@@ -81,12 +81,11 @@ class ReadOnlyAdmin(BaseAdmin):
     def has_add_permission(self, request, obj=None):
         return False
 
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        more_context = {
-            'remove_buttons': True,
-        }
-        more_context.update(extra_context or {})
-        return super().change_view(request, object_id, form_url, more_context)
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class BaseForm(forms.ModelForm):
@@ -99,6 +98,7 @@ class BaseForm(forms.ModelForm):
 
     class Meta:
         fields = [
+            'title',
             'extra_text',
             'saved_file',
         ]
@@ -109,12 +109,18 @@ class PublicDocumentForm(BaseForm):
         super().__init__(*args, **kwargs)
         self.fields['saved_file'].validators.append(CheckExtMIME(allowed_attributes=CHECK_DOC))
 
+    BaseForm.Meta.model = PublicDocument
+
 
 class PublicDocumentAdmin(BaseAdmin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.readonly_fields = self.basic_readonly_fields
-    form = PublicDocumentForm
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj and not self.has_change_permission(request, obj):
+            return super().get_form(request, obj, **kwargs)
+        return PublicDocumentForm
 
 
 admin.site.register(
@@ -128,12 +134,19 @@ class PrivateDocumentForm(BaseForm):
         super().__init__(*args, **kwargs)
         self.fields['saved_file'].validators.append(CheckExtMIME(allowed_attributes=CHECK_DOC))
 
+    BaseForm.Meta.model = PrivateDocument
+
 
 class PrivateDocumentAdmin(BaseAdmin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.readonly_fields = self.basic_readonly_fields
-    form = PrivateDocumentForm
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj and not self.has_change_permission(request, obj):
+            return super().get_form(request, obj, **kwargs)
+        return PrivateDocumentForm
+
     list_display = [
         'title',
         'proxy_link',
@@ -162,12 +175,19 @@ class UnprocessedImageForm(BaseForm):
         super().__init__(*args, **kwargs)
         self.fields['saved_file'].validators.append(CheckExtMIME(allowed_attributes=CHECK_WEB_IMAGE))
 
+    BaseForm.Meta.model = UnprocessedImage
+
 
 class UnprocessedImageAdmin(BaseAdmin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.readonly_fields = self.basic_readonly_fields
-    form = UnprocessedImageForm
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj and not self.has_change_permission(request, obj):
+            return super().get_form(request, obj, **kwargs)
+
+        return UnprocessedImageForm
 
 
 admin.site.register(
@@ -199,6 +219,7 @@ class ProcessedImageAdmin(ReadOnlyAdmin):
                 }
             ),
         ] + self.bottom_fieldsets
+
     search_fields = [
         'generated_name',
         'extra_text',

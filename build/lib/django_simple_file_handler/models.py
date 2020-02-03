@@ -33,6 +33,9 @@ from django.template.loader import (
 from django.urls import (
     reverse,
 )
+from django.utils.safestring import (
+    mark_safe,
+)
 from django.utils.text import (
     slugify,
 )
@@ -50,7 +53,7 @@ def create_file_path(instance, filename):
     subdirectory = instance.subdirectory_path
     file_base = instance.generated_name
     file_extension = filename.rsplit('.', 1)[1]
-    return '{}{}.{}' .format(subdirectory, file_base, file_extension)
+    return '{}{}.{}'.format(subdirectory, file_base, file_extension)
 
 
 class BaseMixin(models.Model):
@@ -79,18 +82,21 @@ class BaseMixin(models.Model):
 
     def file_url(self):
         if self.saved_file:
-            return '{}' .format(self.saved_file.url)
+            return self.saved_file.url
         else:
             return 'No file'
     file_url.short_description = 'file URL'
 
     def file_link(self):
         if self.saved_file:
-            return '<a href="{}" target="_blank">File link</a>' .format(self.file_url())
+            return mark_safe(
+                '<a href="{}" target="_blank">File link</a>'.format(
+                    self.file_url(),
+                )
+            )
         else:
             return 'No file'
     file_link.short_description = 'file link'
-    file_link.allow_tags = True
     check_fields = [
         'saved_file',
     ]
@@ -165,12 +171,12 @@ def create_pdf(generated_name, template_location, template_data):
     file_extension = 'pdf'
     file_name = '{}.{}'.format(base_name, file_extension)
     content_type = 'application/pdf'
-    if hasattr(settings, 'FILE_HANDLER_WEASYPRINT'):
+    try:
         if settings.FILE_HANDLER_WEASYPRINT:
             from weasyprint import HTML
-            pdf = HTML(string=rendered_html).write_pdf(target=temp_handle)
-    else:
-        pdf = pisa.CreatePDF(
+            HTML(string=rendered_html).write_pdf(target=temp_handle)
+    except AttributeError:
+        pisa.CreatePDF(
             rendered_html,
             dest=temp_handle,
             link_callback=link_callback,
@@ -182,6 +188,7 @@ class PDFMixin(models.Model):
     def __init__(self, *args, **kwargs):
         self.template_data = kwargs.pop('template_data', {})
         super().__init__(*args, **kwargs)
+
     template_location = models.TextField(
         blank=True,
         null=True,
@@ -235,7 +242,7 @@ def create_key(length):
 def create_proxy(self):
     slug = create_slug(self.title)
     file_extension = self.saved_file.url.rsplit('.', 1)[1]
-    return '{}.{}' .format(slug, file_extension)
+    return '{}.{}'.format(slug, file_extension)
 
 
 class PrivateMixin(models.Model):
@@ -259,11 +266,14 @@ class PrivateMixin(models.Model):
 
     def proxy_link(self):
         if self.saved_file:
-            return '<a href="{}" target="_blank">Proxy link</a>' .format(self.proxy_url())
+            return mark_safe(
+                '<a href="{}" target="_blank">Proxy link</a>'.format(
+                    self.proxy_url(),
+                )
+            )
         else:
             return 'No file'
     proxy_link.short_description = 'proxy link'
-    proxy_link.allow_tags = True
 
     def save(self, *args, **kwargs):
         if not self.generated_name:
@@ -278,7 +288,7 @@ class PrivateMixin(models.Model):
 def create_slug_with_key(title):
     slug = create_slug(title)
     key = create_key(16)
-    return '{}-{}' .format(slug, key)
+    return '{}-{}'.format(slug, key)
 
 
 class TemporaryMixin(models.Model):
@@ -312,17 +322,22 @@ class RenameMixin(models.Model):
         abstract = True
 
 
-def custom_subdirectory():
-    if hasattr(settings, 'FILE_HANDLER_DIRECTORY'):
-        return settings.FILE_HANDLER_DIRECTORY
-    else:
-        return ''
+def custom_subdirectory(path):
+    try:
+        directory = settings.FILE_HANDLER_DIRECTORY
+    except AttributeError:
+        directory = ''
+    return '{}{}'.format(
+        directory,
+        path,
+    )
 
 
 class PublicDocument(BaseMixin, TitledMixin, PublicMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    subdirectory_path = custom_subdirectory() + 'documents/public/'
+
+    subdirectory_path = custom_subdirectory('documents/public/')
 
     class Meta:
         verbose_name = 'document (public)'
@@ -332,7 +347,8 @@ class PublicDocument(BaseMixin, TitledMixin, PublicMixin, RenameMixin):
 class PrivateDocument(BaseMixin, TitledMixin, PrivateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    subdirectory_path = custom_subdirectory() + 'documents/private/'
+
+    subdirectory_path = custom_subdirectory('documents/private/')
     proxy_reverse = 'django_simple_file_handler:proxy_document'
 
     class Meta:
@@ -343,10 +359,11 @@ class PrivateDocument(BaseMixin, TitledMixin, PrivateMixin):
 class TemporaryDocument(BaseMixin, TitledMixin, TemporaryMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
     title = models.CharField(
         max_length=245,
     )
-    subdirectory_path = custom_subdirectory() + 'documents/temporary/'
+    subdirectory_path = custom_subdirectory('documents/temporary/')
 
     class Meta:
         verbose_name = 'document (temporary)'
@@ -356,7 +373,8 @@ class TemporaryDocument(BaseMixin, TitledMixin, TemporaryMixin, RenameMixin):
 class UnprocessedImage(ImageMixin, TitledMixin, PublicMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    subdirectory_path = custom_subdirectory() + 'images/unprocessed/'
+
+    subdirectory_path = custom_subdirectory('images/unprocessed/')
 
     class Meta:
         verbose_name = 'image (unprocessed)'
@@ -365,7 +383,7 @@ class UnprocessedImage(ImageMixin, TitledMixin, PublicMixin, RenameMixin):
 
 def create_image_path(instance, filename):
     subdirectory = instance.image_path
-    return '{}{}' .format(subdirectory, filename)
+    return '{}{}'.format(subdirectory, filename)
 
 
 def process_image(instance, output_mode, content_type, file_format, file_extension):
@@ -373,7 +391,7 @@ def process_image(instance, output_mode, content_type, file_format, file_extensi
     output_width = instance.output_width
     output_height = instance.output_height
     temp_handle = BytesIO()
-    file_name = '{}.{}' .format(instance.generated_name, file_extension)
+    file_name = '{}.{}'.format(instance.generated_name, file_extension)
     ''' Convert the mode if necessary '''
     if input_image.mode is not output_mode:
         image = input_image.convert(output_mode)
@@ -418,15 +436,16 @@ def process_image(instance, output_mode, content_type, file_format, file_extensi
 
 
 def pillow_settings():
-    if hasattr(settings, 'FILE_HANDLER_PILLOW'):
+    try:
         return settings.FILE_HANDLER_PILLOW
-    else:
+    except AttributeError:
         return {}
 
 
 class ProcessedImage(ImageMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
     output_width = models.PositiveIntegerField(
         blank=True,
         null=True,
@@ -440,8 +459,8 @@ class ProcessedImage(ImageMixin):
         blank=True,
         null=True,
     )
-    subdirectory_path = custom_subdirectory() + 'images/raw/'
-    image_path = custom_subdirectory() + 'images/processed/'
+    subdirectory_path = custom_subdirectory('images/raw/')
+    image_path = custom_subdirectory('images/processed/')
     output_mode = pillow_settings().get('output_mode', 'RGB')
     content_type = pillow_settings().get('content_type', 'image/png')
     file_format = pillow_settings().get('file_format', 'PNG')
@@ -465,17 +484,20 @@ class ProcessedImage(ImageMixin):
 
     def image_url(self):
         if self.saved_file:
-            return '{}' .format(self.processed_file.url)
+            return self.processed_file.url
         else:
             return 'No file'
 
     def image_link(self):
         if self.saved_file:
-            return '<a href="{}" target="_blank">Image link</a>' .format(self.image_url())
+            return mark_safe(
+                '<a href="{}" target="_blank">Image link</a>'.format(
+                    self.image_url(),
+                )
+            )
         else:
             return 'No file'
     image_link.short_description = 'image link'
-    image_link.allow_tags = True
 
     def save(self, *args, **kwargs):
         image_args = [
@@ -509,7 +531,8 @@ class ProcessedImage(ImageMixin):
 class PublicPDF(BaseMixin, PDFMixin, TitledMixin, PublicMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    subdirectory_path = custom_subdirectory() + 'pdf/public/'
+
+    subdirectory_path = custom_subdirectory('pdf/public/')
 
     class Meta:
         verbose_name = 'PDF (public)'
@@ -519,7 +542,8 @@ class PublicPDF(BaseMixin, PDFMixin, TitledMixin, PublicMixin, RenameMixin):
 class PrivatePDF(BaseMixin, PDFMixin, TitledMixin, PrivateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    subdirectory_path = custom_subdirectory() + 'pdf/private/'
+
+    subdirectory_path = custom_subdirectory('pdf/private/')
     proxy_reverse = 'django_simple_file_handler:proxy_pdf'
 
     class Meta:
@@ -530,10 +554,11 @@ class PrivatePDF(BaseMixin, PDFMixin, TitledMixin, PrivateMixin):
 class TemporaryPDF(BaseMixin, PDFMixin, TitledMixin, TemporaryMixin, RenameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
     title = models.CharField(
         max_length=245,
     )
-    subdirectory_path = custom_subdirectory() + 'pdf/temporary/'
+    subdirectory_path = custom_subdirectory('pdf/temporary/')
 
     class Meta:
         verbose_name = 'PDF (temporary)'

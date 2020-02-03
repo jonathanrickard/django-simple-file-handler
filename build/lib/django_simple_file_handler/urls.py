@@ -1,5 +1,5 @@
-from django.conf.urls import (
-    url,
+from django.urls import (
+    path,
 )
 
 
@@ -13,13 +13,13 @@ app_name = 'django_simple_file_handler'
 
 
 urlpatterns = [
-    url(
-        r'^documents/(?P<proxy_slug>.*)',
+    path(
+        'documents/<proxy_slug>',
         proxy_document,
         name='proxy_document',
     ),
-    url(
-        r'^pdf/(?P<proxy_slug>.*)',
+    path(
+        'pdf/<proxy_slug>',
         proxy_pdf,
         name='proxy_pdf',
     ),
