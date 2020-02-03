@@ -25,9 +25,9 @@ Quick start
 
     urlpatterns = [
         ...
-        url(
-            r'^private-file-pseudo-directory-path/',
-            include('django_simple_file_handler.urls')
+        path(
+            'private-file-pseudo-directory-path/',
+            include('django_simple_file_handler.urls'),
         ),
     ]
 
@@ -105,7 +105,7 @@ PDF generation will use `WeasyPrint <https://weasyprint.org/>`_ if it is install
 
 The example code below uses ``PublicPDF``, but ``PrivatePDF`` and ``TemporaryPDF`` work the same way. ::
 
-    generated_pdf = PublicPDF(
+    generated_pdf = PublicPDF.objects.create(
         title='title of the generated PDF document',
         extra_text='any additional text needed with the object',
         template_location='path/to/your/html/template.html',
@@ -115,7 +115,6 @@ The example code below uses ``PublicPDF``, but ``PrivatePDF`` and ``TemporaryPDF
             'value_three': value_to_be_inserted_in_template,
         },
     )
-    generated_pdf.save()
 
 Database object attributes can then be changed without rewriting the PDF file. The file is only written when the ``template_data`` dictionary is given and the object is resaved.
 

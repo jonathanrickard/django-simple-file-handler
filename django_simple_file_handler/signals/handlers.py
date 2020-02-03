@@ -13,9 +13,9 @@ def class_set(input_set):
     unchecked_subclasses = set()
     output_classes = set()
     while len(unchecked_classes) > 0:
-        for item in unchecked_classes:
-            unchecked_subclasses.update(item.__subclasses__())
-            output_classes.add(item)
+        for unchecked_item in unchecked_classes:
+            unchecked_subclasses.update(unchecked_item.__subclasses__())
+            output_classes.add(unchecked_item)
         unchecked_classes = unchecked_subclasses
         unchecked_subclasses = set()
     return output_classes
@@ -26,5 +26,5 @@ def delete_files(sender, instance, *args, **kwargs):
         getattr(instance, field).delete(False)
 
 
-for item in class_set(set({BaseMixin})):
-    pre_delete.connect(delete_files, item)
+for class_item in class_set(set({BaseMixin})):
+    pre_delete.connect(delete_files, class_item)

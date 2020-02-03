@@ -18,7 +18,7 @@ from ..models import (
     TemporaryPDF,
     UnprocessedImage,
 )
-from .test_functions import (
+from .functions import (
     attribute_exists,
     create_document_instance,
     create_pdf_instance,
@@ -38,14 +38,14 @@ class MixinWrap:
         longMessage = False
 
         def test_file_exists(self):
-            error_msg = "For '{}', the file does not exist" .format(
+            error_msg = "For '{}', the file does not exist".format(
                 self.test_instance.__class__.__name__,
             )
             self.assertIs(attribute_exists(self.test_instance.saved_file.file), True, error_msg)
 
         def test_attribute_has_value(self):
             for attr in self.checked_attributes:
-                error_msg = "For '{}', the attribute '{}' did not return a value" .format(
+                error_msg = "For '{}', the attribute '{}' did not return a value".format(
                     self.test_instance.__class__.__name__,
                     attr,
                 )
@@ -57,7 +57,7 @@ class MixinWrap:
             except AttributeError:
                 checked_values = {}
             for attr, value in checked_values.items():
-                error_msg = "For '{}', the value for '{}' was not '{}'" .format(
+                error_msg = "For '{}', the value for '{}' was not '{}'".format(
                     self.test_instance.__class__.__name__,
                     attr,
                     value,
@@ -70,7 +70,7 @@ class MixinWrap:
             except AttributeError:
                 checked_values_contain = {}
             for attr, value in checked_values_contain.items():
-                error_msg = "For '{}', the value for '{}' did not contain '{}'" .format(
+                error_msg = "For '{}', the value for '{}' did not contain '{}'".format(
                     self.test_instance.__class__.__name__,
                     attr,
                     value,
@@ -88,7 +88,7 @@ class PublicDocumentTests(MixinWrap.BaseMixin):
             'title': 'Test Document',
             'extra_text': 'Test extra text',
             'generated_name': 'test-document',
-            'saved_file': custom_subdirectory() + 'documents/public/test-document.pdf',
+            'saved_file': custom_subdirectory('documents/public/test-document.pdf'),
         }
 
     def setUp(self):
@@ -98,7 +98,7 @@ class PublicDocumentTests(MixinWrap.BaseMixin):
 class PrivateDocumentTests(MixinWrap.BaseMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.checked_attributes = self.checked_attributes + [
+        self.checked_attributes += [
             'generated_name',
         ]
         self.checked_values = {
@@ -107,7 +107,7 @@ class PrivateDocumentTests(MixinWrap.BaseMixin):
             'proxy_slug': 'test-document.pdf',
         }
         self.checked_values_contain = {
-            'saved_file': custom_subdirectory() + 'documents/private/',
+            'saved_file': custom_subdirectory('documents/private/'),
         }
 
     def setUp(self):
@@ -123,7 +123,7 @@ class TemporaryDocumentTests(MixinWrap.BaseMixin):
         }
         self.checked_values_contain = {
             'generated_name': 'test-document',
-            'saved_file': custom_subdirectory() + 'documents/temporary/',
+            'saved_file': custom_subdirectory('documents/temporary/'),
         }
 
     def setUp(self):
@@ -137,7 +137,7 @@ class UnprocessedImageTests(MixinWrap.BaseMixin):
             'title': 'Test Image',
             'extra_text': 'Test extra text',
             'generated_name': 'test-image',
-            'saved_file': custom_subdirectory() + 'images/unprocessed/test-image.jpeg',
+            'saved_file': custom_subdirectory('images/unprocessed/test-image.jpeg'),
         }
 
     def setUp(self):
@@ -147,11 +147,11 @@ class UnprocessedImageTests(MixinWrap.BaseMixin):
 class ProcessedImageTests(MixinWrap.BaseMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.checked_attributes = self.checked_attributes + [
+        self.checked_attributes += [
             'generated_name',
         ]
         self.checked_values_contain = {
-            'saved_file': custom_subdirectory() + 'images/raw/',
+            'saved_file': custom_subdirectory('images/raw/'),
         }
 
     def setUp(self):
@@ -162,7 +162,7 @@ class ProcessedImageTests(MixinWrap.BaseMixin):
         output_mode = pillow_settings().get('output_mode', 'RGB')
         file_format = pillow_settings().get('file_format', 'PNG')
         file_extension = pillow_settings().get('file_format', 'png')
-        self.assertIn(custom_subdirectory() + 'images/processed', processed_image.name)
+        self.assertIn(custom_subdirectory('images/processed'), processed_image.name)
         self.assertIn(file_extension, processed_image.name)
         processed_file = Image.open(processed_image.file)
         self.assertIs(processed_file.width, 200)
@@ -178,7 +178,7 @@ class PublicPDFTests(MixinWrap.BaseMixin):
             'title': 'PDF file name',
             'extra_text': 'Test extra text',
             'generated_name': 'pdf-file-name',
-            'saved_file': custom_subdirectory() + 'pdf/public/pdf-file-name.pdf',
+            'saved_file': custom_subdirectory('pdf/public/pdf-file-name.pdf'),
         }
 
     def setUp(self):
@@ -188,7 +188,7 @@ class PublicPDFTests(MixinWrap.BaseMixin):
 class PrivatePDFTests(MixinWrap.BaseMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.checked_attributes = self.checked_attributes + [
+        self.checked_attributes += [
             'generated_name',
         ]
         self.checked_values = {
@@ -197,7 +197,7 @@ class PrivatePDFTests(MixinWrap.BaseMixin):
             'proxy_slug': 'pdf-file-name.pdf',
         }
         self.checked_values_contain = {
-            'saved_file': custom_subdirectory() + 'pdf/private/',
+            'saved_file': custom_subdirectory('pdf/private/'),
         }
 
     def setUp(self):
@@ -213,7 +213,7 @@ class TemporaryPDFTests(MixinWrap.BaseMixin):
         }
         self.checked_values_contain = {
             'generated_name': 'pdf-file-name',
-            'saved_file': custom_subdirectory() + 'pdf/temporary/',
+            'saved_file': custom_subdirectory('pdf/temporary/'),
         }
 
     def setUp(self):
