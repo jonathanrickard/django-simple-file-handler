@@ -47,6 +47,15 @@ from PIL import (
 from xhtml2pdf import (
     pisa,
 )
+from xhtml2pdf.config.httpconfig import (
+    httpConfig,
+)
+
+
+httpConfig.save_keys(
+    'nosslcheck',
+    True,
+)
 
 
 def create_file_path(instance, filename):
