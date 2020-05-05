@@ -84,7 +84,7 @@ Refer to the `Pillow <https://github.com/python-pillow/Pillow>`_ documentation f
 
 Images are processed when an instance is saved with a file assigned to the ``saved_file`` field and a value for one or both of the ``output_width`` and ``output_height`` fields. If one value is given, the image will be scaled proportionally. If both are supplied and they do not match the proportions of the source image, the image will be scaled and cropped on either the bottom or right side, depending on whether the source image is horizontal or vertical.
 
-The processed image is stored in the ``processed_file`` field. Refer to the attributes and methods list above for additional information.
+The processed image is stored in the ``processed_file`` field, while the original file assigned to ``saved_file`` is unchanged and can be processed again as needed. Refer to the attributes and methods list above for additional information.
 
 By default, images are processed into PNGs with RGB mode. To change one or more of the output parameters, add a ``FILE_HANDLER_PILLOW`` setting with a dictionary containing parameters you wish to change, as in this example: ::
 
