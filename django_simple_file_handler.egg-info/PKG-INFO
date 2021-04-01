@@ -1,10 +1,10 @@
 Metadata-Version: 1.1
 Name: django-simple-file-handler
-Version: 0.2.4
+Version: 0.2.5
 Summary: A Django app for storing and processing documents and images
-Home-page: http://www.jonathanrickard.com/
+Home-page: https://github.com/jonathanrickard/django-simple-file-handler
 Author: Jonathan Rickard
-Author-email: jonathan.rickard@gmail.com
+Author-email: jonathan@jonathanrickard.com
 License: MIT License
 Description: ==========================
         django-simple-file-handler
@@ -189,15 +189,18 @@ Description: ==========================
         
         The django-simple-file-handler models and admin classes make use of modular, reusable mixins and functions that can, of course, be imported for use with your own code.
         
+Keywords: django,files,images
 Platform: UNKNOWN
 Classifier: Environment :: Web Environment
 Classifier: Framework :: Django
 Classifier: Framework :: Django :: 2.2
-Classifier: Intended Audience :: Developers
-Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python
 Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Intended Audience :: Developers
 Classifier: Topic :: Internet :: WWW/HTTP
-Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: License :: OSI Approved :: MIT License
