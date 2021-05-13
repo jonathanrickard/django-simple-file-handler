@@ -4,6 +4,7 @@ from django.apps import (
 
 
 class Config(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
     name = 'django_simple_file_handler'
     verbose_name = 'Files and images'
 

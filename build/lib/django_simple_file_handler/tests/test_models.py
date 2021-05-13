@@ -1,10 +1,10 @@
-from PIL import (
-    Image,
+from django.test import (
+    TestCase,
 )
 
 
-from django.test import (
-    TestCase,
+from PIL import (
+    Image,
 )
 
 
