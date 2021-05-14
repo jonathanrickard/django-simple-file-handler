@@ -74,7 +74,7 @@ class BaseMixin(models.Model):
         auto_now=True,
     )
     generated_name = models.CharField(
-        max_length=254,
+        max_length=255,
         blank=True,
         null=True,
     )
@@ -86,7 +86,7 @@ class BaseMixin(models.Model):
         'uploaded file',
         upload_to=create_file_path,
         validators=[],
-        max_length=254,
+        max_length=255,
     )
 
     def file_url(self):
@@ -256,7 +256,7 @@ def create_proxy(self):
 
 class PrivateMixin(models.Model):
     proxy_slug = models.CharField(
-        max_length=254,
+        max_length=255,
         blank=True,
         null=True,
     )
