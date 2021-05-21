@@ -1,12 +1,12 @@
 CHECK_DOC = {
-    'allowed_extensions' : [
+    'allowed_extensions': [
         'docx',
         'pdf',
         'pptx',
         'xlsx',
         'zip',
     ],
-    'allowed_mimetypes' : [
+    'allowed_mimetypes': [
         'application/pdf',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -14,7 +14,7 @@ CHECK_DOC = {
         'application/xml',
         'application/zip',
     ],
-    'allowed_verbose' : [
+    'allowed_verbose': [
         'Excel',
         'PDF',
         'PowerPoint',
@@ -25,18 +25,18 @@ CHECK_DOC = {
 
 
 CHECK_WEB_IMAGE = {
-    'allowed_extensions' : [
+    'allowed_extensions': [
         'gif',
         'jpg',
         'jpeg',
         'png',
     ],
-    'allowed_mimetypes' : [
+    'allowed_mimetypes': [
         'image/gif',
         'image/jpeg',
         'image/png',
     ],
-    'allowed_verbose' : [
+    'allowed_verbose': [
         'GIF',
         'JPEG',
         'PNG',
@@ -45,7 +45,7 @@ CHECK_WEB_IMAGE = {
 
 
 CHECK_RAW_IMAGE = {
-    'allowed_extensions' : [
+    'allowed_extensions': [
         'gif',
         'jpg',
         'jpeg',
@@ -53,13 +53,13 @@ CHECK_RAW_IMAGE = {
         'tif',
         'tiff',
     ],
-    'allowed_mimetypes' : [
+    'allowed_mimetypes': [
         'image/gif',
         'image/jpeg',
         'image/png',
         'image/tiff',
     ],
-    'allowed_verbose' : [
+    'allowed_verbose': [
         'GIF',
         'JPEG',
         'PNG',
