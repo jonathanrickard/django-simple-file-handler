@@ -159,7 +159,7 @@ class ProcessedImageTests(MixinWrap.BaseMixin):
 
     def test_processed_image_processed_file(self):
         processed_image = self.test_instance.processed_file
-        output_mode = pillow_settings().get('output_mode', 'RGB')
+        output_mode = pillow_settings().get('output_mode', 'RGBA')
         file_format = pillow_settings().get('file_format', 'PNG')
         file_extension = pillow_settings().get('file_format', 'png')
         self.assertIn(custom_subdirectory('images/processed'), processed_image.name)

@@ -31,16 +31,10 @@ class BaseAdmin(admin.ModelAdmin):
         'title',
         'extra_text',
     ]
-    basic_readonly_fields = [
+    readonly_fields = [
         'created',
         'updated',
     ]
-    private_readonly_fields = [
-        'title',
-        'extra_text',
-        'saved_file',
-    ]
-    readonly_fields = basic_readonly_fields + private_readonly_fields
     top_fieldsets = [
         (
             None, {
@@ -77,17 +71,6 @@ class BaseAdmin(admin.ModelAdmin):
     list_per_page = 20
 
 
-class ReadOnlyAdmin(BaseAdmin):
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-
 class BaseForm(forms.ModelForm):
     title = forms.CharField(
         error_messages={
@@ -113,9 +96,6 @@ class PublicDocumentForm(BaseForm):
 
 
 class PublicDocumentAdmin(BaseAdmin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.readonly_fields = self.basic_readonly_fields
 
     def get_form(self, request, obj=None, **kwargs):
         if obj and not self.has_change_permission(request, obj):
@@ -138,9 +118,6 @@ class PrivateDocumentForm(BaseForm):
 
 
 class PrivateDocumentAdmin(BaseAdmin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.readonly_fields = self.basic_readonly_fields
 
     def get_form(self, request, obj=None, **kwargs):
         if obj and not self.has_change_permission(request, obj):
@@ -160,8 +137,20 @@ admin.site.register(
 )
 
 
-class TemporaryDocumentAdmin(ReadOnlyAdmin):
-    pass
+class TemporaryDocumentForm(BaseForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['saved_file'].validators.append(CheckExtMIME(allowed_attributes=CHECK_DOC))
+
+    BaseForm.Meta.model = PublicDocument
+
+
+class TemporaryDocumentAdmin(BaseAdmin):
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj and not self.has_change_permission(request, obj):
+            return super().get_form(request, obj, **kwargs)
+        return TemporaryDocumentForm
 
 
 admin.site.register(
@@ -179,9 +168,6 @@ class UnprocessedImageForm(BaseForm):
 
 
 class UnprocessedImageAdmin(BaseAdmin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.readonly_fields = self.basic_readonly_fields
 
     def get_form(self, request, obj=None, **kwargs):
         if obj and not self.has_change_permission(request, obj):
@@ -196,16 +182,12 @@ admin.site.register(
 )
 
 
-class ProcessedImageAdmin(ReadOnlyAdmin):
+class ProcessedImageAdmin(BaseAdmin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.readonly_fields = [
-            'output_width',
-            'output_height',
             'processed_file',
-            'extra_text',
-            'saved_file',
-        ] + self.basic_readonly_fields
+        ] + self.readonly_fields
         self.fieldsets = [
             (
                 None, {
@@ -240,7 +222,20 @@ admin.site.register(
 )
 
 
-class PublicPDFAdmin(ReadOnlyAdmin):
+class BasePDFAdmin(BaseAdmin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.readonly_fields = [
+            'title',
+            'extra_text',
+            'saved_file',
+        ] + self.readonly_fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class PublicPDFAdmin(BasePDFAdmin):
     pass
 
 
@@ -250,7 +245,7 @@ admin.site.register(
 )
 
 
-class PrivatePDFAdmin(ReadOnlyAdmin):
+class PrivatePDFAdmin(BasePDFAdmin):
     list_display = [
         'title',
         'proxy_link',
@@ -264,7 +259,7 @@ admin.site.register(
 )
 
 
-class TemporaryPDFAdmin(ReadOnlyAdmin):
+class TemporaryPDFAdmin(BasePDFAdmin):
     pass
 
 

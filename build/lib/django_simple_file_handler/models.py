@@ -231,13 +231,9 @@ class TitledMixin(models.Model):
         abstract = True
 
 
-def create_slug(title):
-    return slugify(title)
-
-
 class PublicMixin(models.Model):
     def save(self, *args, **kwargs):
-        self.generated_name = create_slug(self.title)
+        self.generated_name = slugify(self.title)
         super().save(*args, **kwargs)
 
     class Meta:
@@ -249,7 +245,7 @@ def create_key(length):
 
 
 def create_proxy(self):
-    slug = create_slug(self.title)
+    slug = slugify(self.title)
     file_extension = self.saved_file.url.rsplit('.', 1)[1]
     return '{}.{}'.format(slug, file_extension)
 
@@ -286,7 +282,7 @@ class PrivateMixin(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.generated_name:
-            self.generated_name = create_key(128)
+            self.generated_name = create_key(20)
         self.proxy_slug = create_proxy(self)
         super().save(*args, **kwargs)
 
@@ -295,8 +291,8 @@ class PrivateMixin(models.Model):
 
 
 def create_slug_with_key(title):
-    slug = create_slug(title)
-    key = create_key(16)
+    slug = slugify(title)
+    key = create_key(20)
     return '{}-{}'.format(slug, key)
 
 
@@ -470,7 +466,7 @@ class ProcessedImage(ImageMixin):
     )
     subdirectory_path = custom_subdirectory('images/raw/')
     image_path = custom_subdirectory('images/processed/')
-    output_mode = pillow_settings().get('output_mode', 'RGB')
+    output_mode = pillow_settings().get('output_mode', 'RGBA')
     content_type = pillow_settings().get('content_type', 'image/png')
     file_format = pillow_settings().get('file_format', 'PNG')
     file_extension = pillow_settings().get('file_format', 'png')
@@ -528,7 +524,7 @@ class ProcessedImage(ImageMixin):
                     self.processed_file = process_image(*image_args)
                     break
         else:
-            self.generated_name = create_key(length=32)
+            self.generated_name = create_key(20)
             self.processed_file = process_image(*image_args)
         super().save(*args, **kwargs)
 
@@ -544,8 +540,8 @@ class PublicPDF(BaseMixin, PDFMixin, TitledMixin, PublicMixin, RenameMixin):
     subdirectory_path = custom_subdirectory('pdf/public/')
 
     class Meta:
-        verbose_name = 'PDF (public)'
-        verbose_name_plural = 'PDFs (public)'
+        verbose_name = 'Generated PDF (public)'
+        verbose_name_plural = 'Generated PDFs (public)'
 
 
 class PrivatePDF(BaseMixin, PDFMixin, TitledMixin, PrivateMixin):
@@ -556,8 +552,8 @@ class PrivatePDF(BaseMixin, PDFMixin, TitledMixin, PrivateMixin):
     proxy_reverse = 'django_simple_file_handler:proxy_pdf'
 
     class Meta:
-        verbose_name = 'PDF (private)'
-        verbose_name_plural = 'PDFs (private)'
+        verbose_name = 'Generated PDF (private)'
+        verbose_name_plural = 'Generated PDFs (private)'
 
 
 class TemporaryPDF(BaseMixin, PDFMixin, TitledMixin, TemporaryMixin, RenameMixin):
@@ -570,5 +566,5 @@ class TemporaryPDF(BaseMixin, PDFMixin, TitledMixin, TemporaryMixin, RenameMixin
     subdirectory_path = custom_subdirectory('pdf/temporary/')
 
     class Meta:
-        verbose_name = 'PDF (temporary)'
-        verbose_name_plural = 'PDFs (temporary)'
+        verbose_name = 'Generated PDF (temporary)'
+        verbose_name_plural = 'Generated PDFs (temporary)'
