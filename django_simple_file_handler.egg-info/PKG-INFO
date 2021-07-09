@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: django-simple-file-handler
-Version: 0.2.9
+Version: 0.3.0
 Summary: A Django app for storing and processing documents and images
 Home-page: https://github.com/jonathanrickard/django-simple-file-handler
 Author: Jonathan Rickard
@@ -94,7 +94,7 @@ Description: ==========================
         
         The processed image is stored in the ``processed_file`` field, while the original file assigned to ``saved_file`` is unchanged and can be processed again as needed. Refer to the attributes and methods list above for additional information.
         
-        By default, images are processed into PNGs with RGB mode. To change one or more of the output parameters, add a ``FILE_HANDLER_PILLOW`` setting with a dictionary containing parameters you wish to change, as in this example: ::
+        By default, images are processed into PNGs with RGBA mode. To change one or more of the output parameters, add a ``FILE_HANDLER_PILLOW`` setting with a dictionary containing parameters you wish to change, as in this example: ::
         
             FILE_HANDLER_PILLOW = {
                 'output_mode': 'P',
@@ -193,9 +193,6 @@ Keywords: django,files,images
 Platform: UNKNOWN
 Classifier: Environment :: Web Environment
 Classifier: Framework :: Django
-Classifier: Framework :: Django :: 2.2
-Classifier: Framework :: Django :: 3.0
-Classifier: Framework :: Django :: 3.1
 Classifier: Framework :: Django :: 3.2
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python
