@@ -86,7 +86,7 @@ Images are processed when an instance is saved with a file assigned to the ``sav
 
 The processed image is stored in the ``processed_file`` field, while the original file assigned to ``saved_file`` is unchanged and can be processed again as needed. Refer to the attributes and methods list above for additional information.
 
-By default, images are processed into PNGs with RGB mode. To change one or more of the output parameters, add a ``FILE_HANDLER_PILLOW`` setting with a dictionary containing parameters you wish to change, as in this example: ::
+By default, images are processed into PNGs with RGBA mode. To change one or more of the output parameters, add a ``FILE_HANDLER_PILLOW`` setting with a dictionary containing parameters you wish to change, as in this example: ::
 
     FILE_HANDLER_PILLOW = {
         'output_mode': 'P',
