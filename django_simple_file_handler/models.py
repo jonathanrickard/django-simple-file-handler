@@ -2,14 +2,6 @@ from io import (
     BytesIO,
 )
 import os
-from random import (
-    choice,
-)
-from string import (
-    ascii_lowercase,
-    ascii_uppercase,
-    digits,
-)
 
 
 from django.conf import (
@@ -32,6 +24,9 @@ from django.template.loader import (
 )
 from django.urls import (
     reverse,
+)
+from django.utils.crypto import (
+    get_random_string,
 )
 from django.utils.safestring import (
     mark_safe,
@@ -240,10 +235,6 @@ class PublicMixin(models.Model):
         abstract = True
 
 
-def create_key(length):
-    return ''.join(choice(ascii_lowercase + ascii_uppercase + digits) for _ in range(length))
-
-
 def create_proxy(self):
     slug = slugify(self.title)
     file_extension = self.saved_file.url.rsplit('.', 1)[1]
@@ -282,7 +273,7 @@ class PrivateMixin(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.generated_name:
-            self.generated_name = create_key(20)
+            self.generated_name = get_random_string(20)
         self.proxy_slug = create_proxy(self)
         super().save(*args, **kwargs)
 
@@ -292,7 +283,7 @@ class PrivateMixin(models.Model):
 
 def create_slug_with_key(title):
     slug = slugify(title)
-    key = create_key(20)
+    key = get_random_string(20)
     return '{}-{}'.format(slug, key)
 
 
@@ -524,7 +515,7 @@ class ProcessedImage(ImageMixin):
                     self.processed_file = process_image(*image_args)
                     break
         else:
-            self.generated_name = create_key(20)
+            self.generated_name = get_random_string(20)
             self.processed_file = process_image(*image_args)
         super().save(*args, **kwargs)
 
