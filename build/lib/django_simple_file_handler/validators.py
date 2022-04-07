@@ -12,7 +12,7 @@ from django.utils.deconstruct import (
 
 
 def formatted_list(unformatted_list):
-    return ''.join('{}, '.format(list_item) for list_item in unformatted_list)[:-2]
+    return ''.join(f'{list_item}, ' for list_item in unformatted_list)[:-2]
 
 
 @deconstructible
@@ -28,7 +28,7 @@ class CheckExtMIME:
         ext = value.name.rsplit('.', 1)[1].lower()
         ''' Check file extension '''
         if self.allowed_extensions and ext not in self.allowed_extensions:
-            error_message = 'Allowed file extensions: {}.'.format(formatted_list(self.allowed_extensions))
+            error_message = f'Allowed file extensions: {formatted_list(self.allowed_extensions)}.'
             raise ValidationError(error_message)
         ''' Check file MIME type '''
         try:
@@ -37,5 +37,5 @@ class CheckExtMIME:
         except ImportError:
             mime_type = guess_type(value.name)[0]
         if self.allowed_mime_types and mime_type not in self.allowed_mime_types:
-            error_message = 'Allowed file types: {}.'.format(formatted_list(self.allowed_verbose))
+            error_message = f'Allowed file types: {formatted_list(self.allowed_verbose)}.'
             raise ValidationError(error_message)

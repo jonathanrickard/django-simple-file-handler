@@ -30,10 +30,7 @@ def custom_subdirectory(path):
         directory = settings.FILE_HANDLER_DIRECTORY
     except AttributeError:
         directory = ''
-    return '{}{}'.format(
-        directory,
-        path,
-    )
+    return f'{directory}{path}'
 
 
 def pillow_settings():
@@ -131,15 +128,10 @@ def attribute_exists(instance_attribute):
 
 
 def status_code_equals(self, attr_name, status_code):
-    error_msg = "For view '{}', the status code returned was not '{}'".format(
-        attr_name,
-        str(status_code),
-    )
+    error_msg = f"For view '{attr_name}', the status code returned was not '{str(status_code)}'"
     self.assertEqual(self.response.status_code, status_code, error_msg)
 
 
 def file_equals(self, attr_name):
-    error_msg = "For view '{}', the assigned file was not returned".format(
-        attr_name,
-    )
+    error_msg = f"For view '{attr_name}', the assigned file was not returned"
     self.assertEqual(self.response.content, self.test_instance.saved_file.read(), error_msg)

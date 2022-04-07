@@ -57,7 +57,7 @@ def create_file_path(instance, filename):
     subdirectory = instance.subdirectory_path
     file_base = instance.generated_name
     file_extension = filename.rsplit('.', 1)[1]
-    return '{}{}.{}'.format(subdirectory, file_base, file_extension)
+    return f'{subdirectory}{file_base}.{file_extension}'
 
 
 class BaseMixin(models.Model):
@@ -94,9 +94,7 @@ class BaseMixin(models.Model):
     def file_link(self):
         if self.saved_file:
             return mark_safe(
-                '<a href="{}" target="_blank">File link</a>'.format(
-                    self.file_url(),
-                )
+                f'<a href="{self.file_url()}" target="_blank">File link</a>'
             )
         else:
             return 'No file'
@@ -173,7 +171,7 @@ def create_pdf(generated_name, template_location, template_data):
     temp_handle = BytesIO()
     base_name = generated_name
     file_extension = 'pdf'
-    file_name = '{}.{}'.format(base_name, file_extension)
+    file_name = f'{base_name}.{file_extension}'
     content_type = 'application/pdf'
     try:
         if settings.FILE_HANDLER_WEASYPRINT:
@@ -238,7 +236,7 @@ class PublicMixin(models.Model):
 def create_proxy(self):
     slug = slugify(self.title)
     file_extension = self.saved_file.url.rsplit('.', 1)[1]
-    return '{}.{}'.format(slug, file_extension)
+    return f'{slug}.{file_extension}'
 
 
 class PrivateMixin(models.Model):
@@ -263,9 +261,7 @@ class PrivateMixin(models.Model):
     def proxy_link(self):
         if self.saved_file:
             return mark_safe(
-                '<a href="{}" target="_blank">Proxy link</a>'.format(
-                    self.proxy_url(),
-                )
+                f'<a href="{self.proxy_url()}" target="_blank">Proxy link</a>'
             )
         else:
             return 'No file'
@@ -284,7 +280,7 @@ class PrivateMixin(models.Model):
 def create_slug_with_key(title):
     slug = slugify(title)
     key = get_random_string(20)
-    return '{}-{}'.format(slug, key)
+    return f'{slug}-{key}'
 
 
 class TemporaryMixin(models.Model):
@@ -323,10 +319,7 @@ def custom_subdirectory(path):
         directory = settings.FILE_HANDLER_DIRECTORY
     except AttributeError:
         directory = ''
-    return '{}{}'.format(
-        directory,
-        path,
-    )
+    return f'{directory}{path}'
 
 
 class PublicDocument(BaseMixin, TitledMixin, PublicMixin, RenameMixin):
@@ -379,7 +372,7 @@ class UnprocessedImage(ImageMixin, TitledMixin, PublicMixin, RenameMixin):
 
 def create_image_path(instance, filename):
     subdirectory = instance.image_path
-    return '{}{}'.format(subdirectory, filename)
+    return f'{subdirectory}{filename}'
 
 
 def process_image(instance, output_mode, content_type, file_format, file_extension):
@@ -387,7 +380,7 @@ def process_image(instance, output_mode, content_type, file_format, file_extensi
     output_width = instance.output_width
     output_height = instance.output_height
     temp_handle = BytesIO()
-    file_name = '{}.{}'.format(instance.generated_name, file_extension)
+    file_name = f'{instance.generated_name}.{file_extension}'
     ''' Convert the mode if necessary '''
     if input_image.mode is not output_mode:
         image = input_image.convert(output_mode)
@@ -487,9 +480,7 @@ class ProcessedImage(ImageMixin):
     def image_link(self):
         if self.saved_file:
             return mark_safe(
-                '<a href="{}" target="_blank">Image link</a>'.format(
-                    self.image_url(),
-                )
+                f'<a href="{self.image_url()}" target="_blank">Image link</a>'
             )
         else:
             return 'No file'

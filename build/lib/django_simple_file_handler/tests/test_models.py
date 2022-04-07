@@ -38,17 +38,12 @@ class MixinWrap:
         longMessage = False
 
         def test_file_exists(self):
-            error_msg = "For '{}', the file does not exist".format(
-                self.test_instance.__class__.__name__,
-            )
+            error_msg = f"For '{self.test_instance.__class__.__name__}', the file does not exist"
             self.assertIs(attribute_exists(self.test_instance.saved_file.file), True, error_msg)
 
         def test_attribute_has_value(self):
             for attr in self.checked_attributes:
-                error_msg = "For '{}', the attribute '{}' did not return a value".format(
-                    self.test_instance.__class__.__name__,
-                    attr,
-                )
+                error_msg = f"For '{self.test_instance.__class__.__name__}', the attribute '{attr}' did not return a value"
                 self.assertTrue(len(str(getattr(self.test_instance, attr))) > 0, error_msg)
 
         def test_attribute_value(self):
@@ -57,11 +52,7 @@ class MixinWrap:
             except AttributeError:
                 checked_values = {}
             for attr, value in checked_values.items():
-                error_msg = "For '{}', the value for '{}' was not '{}'".format(
-                    self.test_instance.__class__.__name__,
-                    attr,
-                    value,
-                )
+                error_msg = f"For '{self.test_instance.__class__.__name__}', the value for '{attr}' was not '{value}'"
                 self.assertTrue(getattr(self.test_instance, attr, '') == value, error_msg)
 
         def test_attribute_value_contains(self):
@@ -70,11 +61,7 @@ class MixinWrap:
             except AttributeError:
                 checked_values_contain = {}
             for attr, value in checked_values_contain.items():
-                error_msg = "For '{}', the value for '{}' did not contain '{}'".format(
-                    self.test_instance.__class__.__name__,
-                    attr,
-                    value,
-                )
+                error_msg = f"For '{self.test_instance.__class__.__name__}', the value for '{attr}' did not contain '{value}'"
                 self.assertIn(value, str(getattr(self.test_instance, attr, '')), error_msg)
 
         def tearDown(self):
