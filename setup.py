@@ -2,4 +2,3 @@ import setuptools
 
 
 setuptools.setup()
-
