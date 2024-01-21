@@ -24,6 +24,8 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-
 # PyCharm
 .idea/
+
+# VS Code
+.vscode/
