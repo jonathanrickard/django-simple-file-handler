@@ -405,7 +405,7 @@ def process_image(instance, output_mode, content_type, file_format, file_extensi
             resize_width,
             resize_height,
         ),
-        Image.ANTIALIAS,
+        Image.LANCZOS,
     )
     ''' Crop the image if necessary '''
     cropped_image = resized_image.crop(
