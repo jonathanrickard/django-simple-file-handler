@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: django_simple_file_handler
-Version: 0.3.4
+Version: 0.3.5
 Summary: A Django app for storing and processing documents and images
 Home-page: https://github.com/jonathanrickard/django-simple-file-handler
 Author: Jonathan Rickard
@@ -22,7 +22,7 @@ Classifier: Intended Audience :: Developers
 Classifier: Topic :: Internet :: WWW/HTTP
 Classifier: License :: OSI Approved :: MIT License
 License-File: LICENSE
-Requires-Dist: Django<=5.0,>=4.2
+Requires-Dist: Django<5.1,>=4.2
 Requires-Dist: Pillow>=8.3.0
 Requires-Dist: xhtml2pdf>=0.2.5
 
